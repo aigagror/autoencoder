@@ -130,6 +130,10 @@ class GAN(keras.Model):
         self.disc = disc
         self.bce = losses.BinaryCrossentropy(from_logits=True)
 
+        if args.load:
+            self.gen.load_weights(os.path.join(args.out, 'gen.h5'))
+            self.disc.load_weights(os.path.join(args.out, 'disc.h5'))
+
     def call(self, imgs):
         return self.gen(imgs)
 
@@ -204,7 +208,6 @@ def make_model(args, img_c):
 
         # GAN
         model = GAN(args, gen, disc)
-        model.build([None, args.imsize, args.imsize, img_c])
         model.compile(d_opt=keras.optimizers.Adam(args.disc_lr),
                       g_opt=keras.optimizers.Adam(args.gen_lr))
     else:

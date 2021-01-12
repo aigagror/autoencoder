@@ -37,7 +37,7 @@ def plot_sample_images(model, ds):
     return ret
 
 
-class CustomCallback(keras.callbacks.Callback):
+class PlotImagesCallback(keras.callbacks.Callback):
     def __init__(self, args, ds_val):
         self.args = args
         self.ds_val = ds_val
@@ -57,7 +57,7 @@ def train(args, model, ds_train, ds_val):
         keras.callbacks.TensorBoard(args.out, histogram_freq=1, update_freq=32),
         keras.callbacks.ModelCheckpoint(os.path.join(args.out, 'model'),
                                         save_weights_only=True),
-        CustomCallback(args, ds_val),
+        PlotImagesCallback(args, ds_val),
     ]
     try:
         model.fit(ds_train, batch_size=args.bsz, epochs=args.epochs,
