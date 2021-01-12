@@ -1,0 +1,63 @@
+import argparse
+
+import tensorflow as tf
+from tensorflow.keras import mixed_precision
+
+parser = argparse.ArgumentParser()
+
+# Data
+parser.add_argument('--data', type=str)
+parser.add_argument('--imsize', type=int)
+
+# Model
+parser.add_argument('--model', choices=['autoencoder', 'gan'])
+parser.add_argument('--zdim', type=int)
+parser.add_argument('--hdim', type=int)
+parser.add_argument('--encoder', choices=['affine', 'conv'])
+parser.add_argument('--synthesis', choices=['affine', 'conv', 'style'])
+parser.add_argument('--r1', type=float)
+
+# Style Content Model
+parser.add_argument('--style-layer', type=int)
+parser.add_argument('--content-layer', type=int)
+parser.add_argument('--alpha', type=float)
+
+# Training
+parser.add_argument('--epochs', type=int)
+parser.add_argument('--ae-lr', type=float)
+parser.add_argument('--gen-lr', type=float)
+parser.add_argument('--disc-lr', type=float)
+parser.add_argument('--bsz', type=int)
+
+# Save
+parser.add_argument('--out', type=str)
+parser.add_argument('--load', action='store_true')
+
+# Strategy
+parser.add_argument('--tpu', action='store_true')
+parser.add_argument('--policy', choices=['mixed_bfloat16', 'float32'])
+
+
+def setup(args):
+    global global_bsz
+    global_bsz = args.bsz
+
+    # Logging
+    tf.get_logger().setLevel('WARNING')
+
+    # Policy
+    mixed_precision.set_global_policy(args.policy)
+    for d in ['bfloat16', 'float16', 'float32']:
+        if d in args.policy:
+            args.dtype = d
+            break
+
+    # Device and strategy
+    if args.tpu:
+        resolver = tf.distribute.cluster_resolver.TPUClusterResolver()
+        tf.config.experimental_connect_to_cluster(resolver)
+        tf.tpu.experimental.initialize_tpu_system(resolver)
+        strategy = tf.distribute.TPUStrategy(resolver)
+    else:
+        strategy = tf.distribute.get_strategy()
+    return strategy
