@@ -2,11 +2,11 @@ import os
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow._api.v2 import nn
+from tensorflow import keras, nn
+from tensorflow.keras import layers, losses
 
-from models.layers import LatentMap
-from models.losses import r1_penalty
+from models.custom_layers import LatentMap
+from models.custom_losses import r1_penalty
 from models.sc import SC_VGG19
 from models.style_synth import FirstStyleSynthBlock, HiddenStyleSynthBlock
 

@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 
-from models.layers import LearnableNoise
+from models.custom_layers import LearnableNoise
 
 
 class StyleConv2D(layers.Layer):

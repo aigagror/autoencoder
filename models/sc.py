@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import keras, nn
 from tensorflow.keras import losses
 
-from models.losses import bn_loss
+from models.custom_losses import bn_loss
 
 
 class StyleContent(keras.Model):
