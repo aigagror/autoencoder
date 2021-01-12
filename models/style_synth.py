@@ -35,9 +35,9 @@ class StyleConv2D(layers.Layer):
 
 
 class FirstStyleSynthBlock(layers.Layer):
-    def __init__(self, args, hdim):
-        super().__init__()
-        self.seed = tf.Variable(tf.random.normal([1, 4, 4, args.zdim]))
+    def __init__(self, args, hdim, **kwargs):
+        super().__init__(**kwargs)
+        self.seed = tf.Variable(tf.random.normal([1, 4, 4, args.zdim]), name=self.name + '/seed')
 
         self.style_conv = StyleConv2D(args, args.zdim, hdim)
         self.noise = LearnableNoise(args, hdim)
@@ -54,8 +54,8 @@ class FirstStyleSynthBlock(layers.Layer):
 
 
 class HiddenStyleSynthBlock(layers.Layer):
-    def __init__(self, args, in_c, out_c):
-        super().__init__()
+    def __init__(self, args, in_c, out_c, **kwargs):
+        super().__init__(**kwargs)
         self.upsampling = layers.UpSampling2D(interpolation='bilinear')
 
         self.style_conv1 = StyleConv2D(args, in_c, out_c)

@@ -105,11 +105,11 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1])(z)
+        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name='first-synth-block')(z)
 
         # Hidden blocks
         for i in range(start_hidx - 1, len(hdims) - 1):
-            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1])((img, z))
+            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'hidden-synth-block{i}')((img, z))
 
         # To image
         img = layers.Conv2D(img_c, 1, activation='tanh', name='to-img')(img)
@@ -204,6 +204,7 @@ def make_model(args, img_c):
 
         # GAN
         model = GAN(args, gen, disc)
+        model.build([None, args.imsize, args.imsize, img_c])
         model.compile(d_opt=keras.optimizers.Adam(args.disc_lr),
                       g_opt=keras.optimizers.Adam(args.gen_lr))
     else:

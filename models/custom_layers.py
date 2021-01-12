@@ -34,7 +34,8 @@ class STDNorm(layers.Layer):
 class LearnableNoise(layers.Layer):
     def __init__(self, args, channels):
         super().__init__()
-        self.scale = tf.Variable(tf.zeros([1, 1, 1, channels], dtype=args.dtype))
+        self.scale = tf.Variable(tf.zeros([1, 1, 1, channels], dtype=args.dtype),
+                                 name=self.name + '/scale')
 
     def call(self, img):
         noise = tf.random.normal(tf.shape(img), dtype=img.dtype)
