@@ -39,6 +39,7 @@ def plot_sample_images(model, ds):
 
 class PlotImagesCallback(keras.callbacks.Callback):
     def __init__(self, args, ds_val):
+        super().__init__()
         self.args = args
         self.ds_val = ds_val
 
@@ -49,16 +50,33 @@ class PlotImagesCallback(keras.callbacks.Callback):
         imgs, recons = plot_sample_images(self.model, self.ds_val)
 
 
+class ProgressiveGANCheckpoint(keras.callbacks.Callback):
+    def __init__(self, args):
+        super().__init__()
+        self.args = args
+
+    def on_epoch_end(self, epoch, logs=None):
+        self.model.gen.save_weights(os.path.join(self.args.out, 'gen.h5'))
+        self.model.disc.save_weights(os.path.join(self.args.out, 'disc.h5'))
+
+
 def train(args, model, ds_train, ds_val):
+    # Reset log data?
     if not args.load:
         shutil.rmtree(os.path.join(args.out, 'train'), ignore_errors=True)
 
+    # Callbacks
     callbacks = [
         keras.callbacks.TensorBoard(args.out, histogram_freq=1, update_freq=32),
-        keras.callbacks.ModelCheckpoint(os.path.join(args.out, 'model'),
-                                        save_weights_only=True),
         PlotImagesCallback(args, ds_val),
     ]
+    if args.model == 'autoencoder':
+        model_path = os.path.join(args.out, 'model')
+        callbacks.append(keras.callbacks.ModelCheckpoint(model_path, save_weights_only=True))
+    elif args.model == 'gan':
+        callbacks.append(ProgressiveGANCheckpoint(args))
+
+    # Train
     try:
         model.fit(ds_train, batch_size=args.bsz, epochs=args.epochs,
                   steps_per_epoch=28000 // args.bsz,
