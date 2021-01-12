@@ -14,8 +14,7 @@ class StyleConv2D(layers.Layer):
         self.in_scale = layers.Conv2D(in_c, 1, name='in-scale-conv')
         self.in_bias = layers.Conv2D(in_c, 1, name='in-bias-conv')
 
-        self.conv = layers.Conv2D(out_c, 3, padding='same', use_bias=False,
-                                  name='style-conv')
+        self.conv = layers.Conv2D(out_c, 3, padding='same', use_bias=False, name='style-conv')
         self.norm = tfa.layers.InstanceNormalization()
 
     def call(self, input):
@@ -86,7 +85,7 @@ class HiddenStyleSynthBlock(layers.Layer):
 def synthesize(args, z, img_c):
     hdims = [min(512, args.hdim), min(512, args.hdim), min(512, args.hdim),
              min(512, args.hdim), min(256, args.hdim), min(128, args.hdim),
-             64, 32, 16]
+             min(64, args.hdim), min(32, args.hdim), min(16, args.hdim)]
     start_hidx = len(hdims) - int(np.log2(args.imsize)) + 2
     if args.synthesis == 'affine':
         img = keras.Sequential([
@@ -99,25 +98,24 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
+        prefix = f'first-synth-block{start_hidx-1}'
         img = keras.Sequential([
-            layers.Conv2DTranspose(args.hdim, kernel_size=4,
-                                   name='first-conv-synth'),
+            layers.Conv2DTranspose(args.hdim, kernel_size=4, name=f'{prefix}-convt'),
             layers.LeakyReLU(0.2)
-        ], 'first-synth-block')(z)
+        ], prefix)(z)
 
         # Hidden blocks
         for i in range(start_hidx, len(hdims)):
+            prefix = f'hidden-synth-block{i}'
             img = keras.Sequential([
                 layers.UpSampling2D(interpolation='bilinear'),
 
-                layers.Conv2D(hdims[i], 3, padding='same',
-                              name=f'hidden-synth-block{i}-conv1'),
+                layers.Conv2D(hdims[i], 3, padding='same', name=f'{prefix}-conv1'),
                 layers.LeakyReLU(0.2),
 
-                layers.Conv2D(hdims[i], 3, padding='same',
-                              name=f'hidden-synth-block{i}-conv2'),
+                layers.Conv2D(hdims[i], 3, padding='same', name=f'{prefix}-conv2'),
                 layers.LeakyReLU(0.2),
-            ], f'hidden-synth-block{i}')(img)
+            ], prefix)(img)
 
         # To image
         img = layers.Conv2D(img_c, 1, activation='tanh', name='to-img')(img)
@@ -126,7 +124,7 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name='first-synth-block')(z)
+        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name=f'first-synth-block{start_hidx-1}')(z)
 
         # Hidden blocks
         for i in range(start_hidx - 1, len(hdims) - 1):

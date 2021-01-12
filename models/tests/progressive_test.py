@@ -30,7 +30,7 @@ class ProgressiveCheckpoints(unittest.TestCase):
         model_32x32.disc.load_weights("out/disc.h5", by_name=True)
 
         # Now progress to 32x32, but with different dimensions
-        args_bad = '--imsize=32 --model=gan --bsz=32 --zdim=64 --hdim=43 --synth=style --encoder=conv '
+        args_bad = '--imsize=32 --model=gan --bsz=32 --zdim=64 --hdim=16 --synth=style --encoder=conv '
         args_bad = utils.parser.parse_args(args_bad.split())
         utils.setup(args_bad)
         model_bad = models.make_model(args_bad, img_c=3)
