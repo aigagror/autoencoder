@@ -15,10 +15,6 @@ class GAN(keras.Model):
         self.disc = disc
         self.bce = losses.BinaryCrossentropy(from_logits=True)
 
-        if args.load:
-            self.gen.load_weights(os.path.join(args.out, 'gen.h5'))
-            self.disc.load_weights(os.path.join(args.out, 'disc.h5'))
-
     def call(self, imgs):
         return self.gen(imgs)
 

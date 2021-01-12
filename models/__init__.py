@@ -21,6 +21,14 @@ def make_model(args, img_c):
         model = keras.Model(img, recon, name='autoencoder')
         model.compile(optimizer=keras.optimizers.Adam(args.ae_lr))
         model.summary()
+
+        # load weights?
+        if args.load:
+            print('loaded weights')
+            model.load_weights(os.path.join(args.out, 'model'))
+        else:
+            print('starting with new weights')
+
     elif args.model == 'gan':
         # Generator
         gen_in = keras.Input((args.imsize, args.imsize, img_c), name='gen-in')
@@ -39,13 +47,15 @@ def make_model(args, img_c):
         model = GAN(args, gen, disc)
         model.compile(d_opt=keras.optimizers.Adam(args.disc_lr),
                       g_opt=keras.optimizers.Adam(args.gen_lr))
+
+        # load weights?
+        if args.load:
+            print('loaded weights')
+            model.gen.load_weights(os.path.join(args.out, 'gen.h5'))
+            model.disc.load_weights(os.path.join(args.out, 'disc.h5'))
+        else:
+            print('starting with new weights')
     else:
         raise Exception(f'unknown model {args.model}')
-
-    if args.load:
-        print('loaded weights')
-        model.load_weights(os.path.join(args.out, 'model'))
-    else:
-        print('starting with new weights')
 
     return model
