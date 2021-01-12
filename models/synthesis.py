@@ -1,5 +1,7 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
+from tensorflow import keras
 from tensorflow.keras import layers
 
 from models.custom_layers import LearnableNoise
@@ -79,3 +81,63 @@ class HiddenStyleSynthBlock(layers.Layer):
         img = self.act(img)
 
         return img
+
+
+def synthesize(args, z, img_c):
+    hdims = [min(512, args.hdim), min(512, args.hdim), min(512, args.hdim),
+             min(512, args.hdim), min(256, args.hdim), min(128, args.hdim),
+             64, 32, 16]
+    start_hidx = len(hdims) - int(np.log2(args.imsize)) + 2
+    if args.synthesis == 'affine':
+        img = keras.Sequential([
+            layers.Dense(args.imsize * args.imsize * img_c, activation='tanh',
+                         name='dense-synth'),
+            layers.Reshape([args.imsize, args.imsize, img_c])
+        ], 'affine-synth')(z)
+
+    elif args.synthesis == 'conv':
+        z = layers.Reshape([1, 1, z.shape[-1]])(z)
+
+        # First block
+        img = keras.Sequential([
+            layers.Conv2DTranspose(args.hdim, kernel_size=4,
+                                   name='first-conv-synth'),
+            layers.LeakyReLU(0.2)
+        ], 'first-synth-block')(z)
+
+        # Hidden blocks
+        for i in range(start_hidx, len(hdims)):
+            img = keras.Sequential([
+                layers.UpSampling2D(interpolation='bilinear'),
+
+                layers.Conv2D(hdims[i], 3, padding='same',
+                              name=f'hidden-synth-block{i}-conv1'),
+                layers.LeakyReLU(0.2),
+
+                layers.Conv2D(hdims[i], 3, padding='same',
+                              name=f'hidden-synth-block{i}-conv2'),
+                layers.LeakyReLU(0.2),
+            ], f'hidden-synth-block{i}')(img)
+
+        # To image
+        img = layers.Conv2D(img_c, 1, activation='tanh', name='to-img')(img)
+
+    elif args.synthesis == 'style':
+        z = layers.Reshape([1, 1, z.shape[-1]])(z)
+
+        # First block
+        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name='first-synth-block')(z)
+
+        # Hidden blocks
+        for i in range(start_hidx - 1, len(hdims) - 1):
+            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'hidden-synth-block{i}')((img, z))
+
+        # To image
+        img = layers.Conv2D(img_c, 1, activation='tanh', name='to-img')(img)
+
+    else:
+        raise Exception(f'unknown synthesis network: {args.synthesis}')
+
+    # Synthesize
+    tf.debugging.assert_shapes([(img, tf.TensorShape([None, args.imsize, args.imsize, img_c]))])
+    return img
