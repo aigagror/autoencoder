@@ -51,8 +51,8 @@ def make_model(args, img_c):
         # load weights?
         if args.load:
             print('loaded weights')
-            model.gen.load_weights(os.path.join(args.out, 'gen.h5'))
-            model.disc.load_weights(os.path.join(args.out, 'disc.h5'))
+            model.gen.load_weights(os.path.join(args.out, 'gen.h5'), by_name=True)
+            model.disc.load_weights(os.path.join(args.out, 'disc.h5'), by_name=True)
         else:
             print('starting with new weights')
     else:
