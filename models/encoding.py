@@ -22,14 +22,15 @@ def encode(args, img, out_dim):
         # Hidden blocks
         hdims = [min(16, args.hdim), min(32, args.hdim), min(64, args.hdim), min(128, args.hdim), min(256, args.hdim),
                  min(512, args.hdim), min(512, args.hdim), min(512, args.hdim), min(512, args.hdim)]
-        i = 0
+        i, in_h, out_h = None, None, None
         for i in range(len(hdims) - 1):
             prefix = f'hidden-encode-block{i}'
+            in_h, out_h = hdims[i], hdims[i + 1]
             output = keras.Sequential([
-                layers.Conv2D(hdims[i], 3, padding='same', name=f'{prefix}-conv1'),
+                layers.Conv2D(in_h, 3, padding='same', name=f'{prefix}-conv1'),
                 layers.LayerNormalization([1, 2, 3], center=False, scale=False),
                 layers.LeakyReLU(0.2),
-                layers.Conv2D(hdims[i + 1], 3, padding='same', name=f'{prefix}-conv2'),
+                layers.Conv2D(out_h, 3, padding='same', name=f'{prefix}-conv2'),
                 layers.LayerNormalization([1, 2, 3], center=False, scale=False),
                 layers.LeakyReLU(0.2),
                 layers.AveragePooling2D(),
@@ -40,10 +41,10 @@ def encode(args, img, out_dim):
         # Last block
         prefix = f'last-encode-block{i}'
         output = keras.Sequential([
-            layers.Conv2D(args.hdim, 3, padding='same', name=f'{prefix}-conv1'),
+            layers.Conv2D(out_h, 3, padding='same', name=f'{prefix}-conv1'),
             layers.LayerNormalization([1, 2, 3], center=False, scale=False),
             layers.LeakyReLU(0.2),
-            layers.Conv2D(args.hdim, 4, padding='valid', name=f'{prefix}-conv2'),
+            layers.Conv2D(out_h, 4, padding='valid', name=f'{prefix}-conv2'),
             layers.LayerNormalization([1, 2, 3], center=False, scale=False),
             layers.LeakyReLU(0.2),
             layers.Flatten(),
