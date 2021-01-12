@@ -1,8 +1,5 @@
-import os
-
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import losses
+from tensorflow import keras, nn
 
 from models import r1_penalty
 
@@ -10,10 +7,11 @@ from models import r1_penalty
 class GAN(keras.Model):
     def __init__(self, args, gen, disc):
         super().__init__()
+        self.bsz = args.bsz
         self.r1_weight = args.r1
         self.gen = gen
         self.disc = disc
-        self.bce = losses.BinaryCrossentropy(from_logits=True)
+        self.bce = nn.sigmoid_cross_entropy_with_logits
 
     def call(self, imgs):
         return self.gen(imgs)
@@ -31,9 +29,10 @@ class GAN(keras.Model):
             real_loss = self.bce(tf.ones_like(d_real_logits), d_real_logits)
             gen_loss = self.bce(tf.zeros_like(d_gen_logits), d_gen_logits)
             bce = real_loss + gen_loss
+            bce = nn.compute_average_loss(bce, global_batch_size=self.bsz)
 
             r1 = r1_penalty(self.disc, img)
-            r1 = tf.reduce_mean(r1)
+            r1 = nn.compute_average_loss(r1, global_batch_size=self.bsz)
             loss = bce + self.r1_weight * r1
 
         grad = tape.gradient(loss, self.disc.trainable_weights)
@@ -41,8 +40,8 @@ class GAN(keras.Model):
 
         # Discriminator probabilities
         d_real, d_gen = tf.sigmoid(d_real_logits), tf.sigmoid(d_gen_logits)
-        d_real = tf.reduce_mean(d_real)
-        d_gen = tf.reduce_mean(d_gen)
+        d_real = nn.compute_average_loss(d_real, global_batch_size=self.bsz)
+        d_gen = nn.compute_average_loss(d_gen, global_batch_size=self.bsz)
 
         return bce, r1, d_real, d_gen
 
