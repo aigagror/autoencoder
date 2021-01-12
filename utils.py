@@ -39,9 +39,6 @@ parser.add_argument('--policy', choices=['mixed_bfloat16', 'float32'])
 
 
 def setup(args):
-    global global_bsz
-    global_bsz = args.bsz
-
     # Logging
     tf.get_logger().setLevel('WARNING')
 

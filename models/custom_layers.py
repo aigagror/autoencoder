@@ -1,14 +1,12 @@
 import tensorflow as tf
-from tensorflow._api.v2 import nn
 from tensorflow.keras import layers, losses
 
 
 class MyMSELoss(layers.Layer):
     def call(self, inputs):
-        global global_bsz
         img, recon = inputs
         mse = losses.mse(img, recon)
-        mse = nn.compute_average_loss(mse, global_batch_size=global_bsz)
+        mse = tf.reduce_mean(mse)
         self.add_loss(mse)
         self.add_metric(mse, 'mse')
         return recon
@@ -16,9 +14,8 @@ class MyMSELoss(layers.Layer):
 
 class FooLoss(layers.Layer):
     def call(self, img):
-        global global_bsz
         loss = tf.reduce_sum(img ** 2, axis=[1, 2, 3])
-        loss = nn.compute_average_loss(loss, global_batch_size=global_bsz)
+        loss = tf.reduce_mean(loss)
         self.add_loss(loss)
         return img
 

@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow import keras, nn
+from tensorflow import keras
 from tensorflow.keras import losses
 
 from models.custom_losses import bn_loss
@@ -7,7 +7,6 @@ from models.custom_losses import bn_loss
 
 class StyleContent(keras.Model):
     def call(self, input):
-        global global_bsz
         target, gen = input
         orig_gen = gen
 
@@ -23,14 +22,12 @@ class StyleContent(keras.Model):
         style_layer_losses = [bn_loss(t, g) for t, g in
                               zip(target_feats['style'], gen_feats['style'])]
         style_loss = sum(style_layer_losses) / len(style_layer_losses)
-        style_loss = nn.compute_average_loss(style_layer_losses,
-                                             global_batch_size=global_bsz)
+        style_loss = tf.reduce_mean(style_layer_losses)
 
         # Content loss
         content_loss = losses.mse(target_feats['content'], gen_feats['content'])
         content_loss = tf.reduce_mean(content_loss, axis=[1, 2])
-        content_loss = nn.compute_average_loss(content_loss,
-                                               global_batch_size=global_bsz)
+        content_loss = tf.reduce_mean(content_loss)
 
         self.add_loss(content_loss + 0.1 * style_loss)
         self.add_metric(style_loss, 'style-loss')

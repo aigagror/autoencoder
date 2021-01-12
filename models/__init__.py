@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras, nn
+from tensorflow import keras
 from tensorflow.keras import layers, losses
 
 from models.custom_layers import LatentMap
@@ -139,7 +139,6 @@ class GAN(keras.Model):
         self.g_opt = g_opt
 
     def disc_step(self, img):
-        global global_bsz
         gen = self.gen(img)
         with tf.GradientTape() as tape:
             d_real_logits, d_gen_logits = self.disc(img), self.disc(gen)
@@ -149,7 +148,7 @@ class GAN(keras.Model):
             bce = real_loss + gen_loss
 
             r1 = r1_penalty(self.disc, img)
-            r1 = nn.compute_average_loss(r1, global_batch_size=global_bsz)
+            r1 = tf.reduce_mean(r1)
             loss = bce + self.r1_weight * r1
 
         grad = tape.gradient(loss, self.disc.trainable_weights)
@@ -157,13 +156,12 @@ class GAN(keras.Model):
 
         # Discriminator probabilities
         d_real, d_gen = tf.sigmoid(d_real_logits), tf.sigmoid(d_gen_logits)
-        d_real = nn.compute_average_loss(d_real, global_batch_size=global_bsz)
-        d_gen = nn.compute_average_loss(d_gen, global_batch_size=global_bsz)
+        d_real = tf.reduce_mean(d_real)
+        d_gen = tf.reduce_mean(d_gen)
 
         return bce, r1, d_real, d_gen
 
     def gen_step(self, img):
-        global global_bsz
         with tf.GradientTape() as tape:
             gen = self.gen(img)
             disc_gen_logits = self.disc(gen)

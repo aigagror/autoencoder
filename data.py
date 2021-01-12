@@ -71,5 +71,4 @@ def load_datasets(args):
             .prefetch(tf.data.AUTOTUNE)
     )
 
-
     return ds_train, ds_val, img_c
