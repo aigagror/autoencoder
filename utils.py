@@ -35,7 +35,7 @@ parser.add_argument('--load', action='store_true')
 
 # Strategy
 parser.add_argument('--tpu', action='store_true')
-parser.add_argument('--policy', choices=['mixed_bfloat16', 'float32'])
+parser.add_argument('--policy', choices=['mixed_bfloat16', 'float32'], default='float32')
 
 
 def setup(args):
