@@ -54,9 +54,9 @@ def train(args, model, ds_train, ds_val):
         shutil.rmtree(os.path.join(args.out, 'train'), ignore_errors=True)
 
     callbacks = [
-        # keras.callbacks.TensorBoard(args.out, histogram_freq=1, update_freq=32),
-        # keras.callbacks.ModelCheckpoint(os.path.join(args.out, 'model'),
-        #                                 save_weights_only=True),
+        keras.callbacks.TensorBoard(args.out, histogram_freq=1, update_freq=32),
+        keras.callbacks.ModelCheckpoint(os.path.join(args.out, 'model'),
+                                        save_weights_only=True),
         CustomCallback(args, ds_val),
     ]
     try:
