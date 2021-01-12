@@ -2,7 +2,6 @@ import os
 
 from tensorflow import keras
 
-from models import synthesize, encode
 from models.custom_layers import LatentMap
 from models.custom_losses import r1_penalty
 from models.encoding import encode
