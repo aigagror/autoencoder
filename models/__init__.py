@@ -22,6 +22,7 @@ def encode(args, img, out_dim):
         # First block
         output = keras.Sequential([
             layers.Conv2D(16, 1, name='first-conv-encode'),
+            layers.LayerNormalization([1, 2, 3], center=False, scale=False),
             layers.LeakyReLU(0.2)
         ], 'first-encode-block')(img)
 
@@ -33,9 +34,11 @@ def encode(args, img, out_dim):
             output = keras.Sequential([
                 layers.Conv2D(hdims[i], 3, padding='same',
                               name=f'hidden-encode-block{i}-conv1'),
+                layers.LayerNormalization([1,2,3], center=False, scale=False),
                 layers.LeakyReLU(0.2),
                 layers.Conv2D(hdims[i + 1], 3, padding='same',
                               name=f'hidden-encode-block{i}-conv2'),
+                layers.LayerNormalization([1, 2, 3], center=False, scale=False),
                 layers.LeakyReLU(0.2),
                 layers.AveragePooling2D(),
             ], f'hidden-encode-block{i}')(output)
@@ -46,9 +49,11 @@ def encode(args, img, out_dim):
         output = keras.Sequential([
             layers.Conv2D(args.hdim, 3, padding='same',
                           name='last-encode-block-conv1'),
+            layers.LayerNormalization([1, 2, 3], center=False, scale=False),
             layers.LeakyReLU(0.2),
             layers.Conv2D(args.hdim, 4, padding='valid',
                           name='last-encode-block-conv2'),
+            layers.LayerNormalization([1, 2, 3], center=False, scale=False),
             layers.LeakyReLU(0.2),
             layers.Flatten(),
             layers.Dense(out_dim, name='last-encode-block-dense')
