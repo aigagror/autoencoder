@@ -78,8 +78,8 @@ def train(args, model, ds_train, ds_val):
 
     # Train
     try:
-        model.fit(ds_train, batch_size=args.bsz, epochs=args.epochs,
-                  steps_per_epoch=28000 // args.bsz,
+        model.fit(ds_train, validation_data=ds_val,
+                  batch_size=args.bsz, epochs=args.epochs,
                   callbacks=callbacks)
     except KeyboardInterrupt:
         print('caught keyboard interrupt. ended training.')
