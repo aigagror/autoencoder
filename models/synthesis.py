@@ -97,7 +97,6 @@ def synthesize(args, z, img_c):
     hdims = [min(512, args.hdim), min(512, args.hdim), min(512, args.hdim),
              min(512, args.hdim), min(256, args.hdim), min(128, args.hdim),
              min(64, args.hdim), min(32, args.hdim), min(16, args.hdim)]
-    start_hidx = len(hdims) - int(np.log2(args.imsize)) + 2
     if args.synthesis == 'affine':
         img = keras.Sequential([
             layers.Dense(args.imsize * args.imsize * img_c, activation='tanh',
@@ -109,14 +108,15 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        prefix = f'first-conv-synth-block{start_hidx - 1}'
+        prefix = f'first-conv-synth-block'
         img = keras.Sequential([
             layers.Conv2DTranspose(args.hdim, kernel_size=4, name=f'{prefix}-convt'),
             layers.LeakyReLU(0.2)
         ], prefix)(z)
 
         # Hidden blocks
-        for i in range(start_hidx, len(hdims)):
+        i = None
+        for i in range(len(hdims)):
             prefix = f'hidden-conv-synth-block{i}'
             img = keras.Sequential([
                 layers.UpSampling2D(interpolation='bilinear'),
@@ -128,23 +128,30 @@ def synthesize(args, z, img_c):
                 layers.LeakyReLU(0.2),
             ], prefix)(img)
 
+            if img.shape[1] == args.imsize:
+                break
+
         # To image
-        img = layers.Conv2D(img_c, 1, activation='tanh', name='to-img')(img)
+        img = layers.Conv2D(img_c, 1, activation='tanh', name=f'{hdims[i]}-to-img')(img)
 
     elif args.synthesis == 'style':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
         img = ConstBlock(args, 'const-block')(z)
-        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name=f'first-style-synth-block{start_hidx - 1}')(
+        img = FirstStyleSynthBlock(args, hdims[0], name='first-style-synth-block')(
             (img, z))
 
         # Hidden blocks
-        for i in range(start_hidx - 1, len(hdims) - 1):
+        i = None
+        for i in range(len(hdims) - 1):
             img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'hidden-style-synth-block{i}')((img, z))
 
+            if img.shape[1] == args.imsize:
+                break
+
         # To image
-        img = layers.Conv2D(img_c, 1, activation='tanh', name='to-img')(img)
+        img = layers.Conv2D(img_c, 1, activation='tanh', name=f'{hdims[i]}-to-img')(img)
 
     else:
         raise Exception(f'unknown synthesis network: {args.synthesis}')

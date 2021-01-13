@@ -2,7 +2,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-
 def encode(args, img, out_dim):
     if args.encoder == 'affine':
         output = keras.Sequential([

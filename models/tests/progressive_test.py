@@ -11,7 +11,7 @@ class ProgressiveCheckpoints(unittest.TestCase):
 
     def test_progressive_save_and_load(self):
         # Pretend to train on 16x16
-        args_16x16 = '--imsize=16 --model=gan --bsz=32 --zdim=32 --hdim=64 --synth=style --encoder=conv '
+        args_16x16 = '--imsize=16 --model=gan --bsz=32 --synth=style --encoder=conv '
         args_16x16 = utils.parser.parse_args(args_16x16.split())
         utils.setup(args_16x16)
         model_16x16 = models.make_model(args_16x16, img_c=3, summarize=False)
@@ -30,7 +30,7 @@ class ProgressiveCheckpoints(unittest.TestCase):
             np.testing.assert_allclose(a.numpy(), b.numpy())
 
         # Now progress to 32x32
-        args_32x32 = '--imsize=32 --model=gan --bsz=32 --zdim=32 --hdim=64 --synth=style --encoder=conv '
+        args_32x32 = '--imsize=32 --model=gan --bsz=32 --synth=style --encoder=conv '
         args_32x32 = utils.parser.parse_args(args_32x32.split())
         utils.setup(args_32x32)
         model_32x32 = models.make_model(args_32x32, img_c=3, summarize=False)
