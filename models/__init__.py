@@ -35,13 +35,13 @@ def make_model(args, img_c):
         z = LatentMap(args)(gen_in)
         gen_out = synthesize(args, z, img_c)
         gen = keras.Model(gen_in, gen_out, name='generator')
-        gen.summary()
+        # gen.summary()
 
         # Discriminator
         disc_in = keras.Input((args.imsize, args.imsize, img_c), name='disc-in')
         disc_out = encode(args, disc_in, out_dim=1)
         disc = keras.Model(disc_in, disc_out, name='discriminator')
-        disc.summary()
+        # disc.summary()
 
         # GAN
         model = GAN(args, gen, disc)

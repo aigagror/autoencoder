@@ -32,25 +32,18 @@ class STDNorm(layers.Layer):
 
 
 class LearnableNoise(layers.Layer):
-    def __init__(self, args, channels):
-        super().__init__()
-        self.scale = tf.Variable(tf.zeros([1, 1, 1, channels], dtype=args.dtype),
-                                 name=self.name + '/scale')
+    def __init__(self, args, channels, name):
+        super().__init__(name=name)
+        self.channels = channels
+
+    def build(self, input_shape):
+        super().build(input_shape)
+        self.scale = self.add_weight('scale', shape=[1, 1, 1, self.channels], trainable=True)
 
     def call(self, img):
         noise = tf.random.normal(tf.shape(img), dtype=img.dtype)
         img = img + self.scale * noise
         return img
-
-
-class AddBias(layers.Layer):
-    def build(self, input_shape):
-        self.b = tf.Variable(tf.random.normal([1] + input_shape[1:]), name='bias')
-
-    def call(self, input):
-        bsz = len(input)
-        b = tf.repeat(self.b, bsz, axis=0)
-        return input + b
 
 
 class LatentMap(layers.Layer):

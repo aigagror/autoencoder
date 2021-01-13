@@ -8,14 +8,14 @@ from models.custom_layers import LearnableNoise
 
 
 class StyleConv2D(layers.Layer):
-    def __init__(self, args, in_c, out_c):
-        super().__init__()
+    def __init__(self, args, in_c, out_c, name):
+        super().__init__(name=name)
         self.in_c, self.out_c = in_c, out_c
-        self.in_scale = layers.Conv2D(in_c, 1, name='in-scale-conv')
-        self.in_bias = layers.Conv2D(in_c, 1, name='in-bias-conv')
+        self.in_scale = layers.Conv2D(in_c, 1, name='in-scale')
+        self.in_bias = layers.Conv2D(in_c, 1, name='in-bias')
 
-        self.conv = layers.Conv2D(out_c, 3, padding='same', use_bias=False, name='style-conv')
-        self.norm = tfa.layers.InstanceNormalization()
+        self.conv = layers.Conv2D(out_c, 3, padding='same', use_bias=False, name='style')
+        self.norm = tfa.layers.InstanceNormalization(name='norm')
 
     def call(self, input):
         # latent variable z is expected to be of shape [bsz, 1, 1, zdim]
@@ -35,19 +35,30 @@ class StyleConv2D(layers.Layer):
         return img
 
 
-class FirstStyleSynthBlock(layers.Layer):
-    def __init__(self, args, hdim, name):
+class ConstBlock(layers.Layer):
+    def __init__(self, args, name):
         super().__init__(name=name)
-        self.seed = tf.Variable(tf.random.normal([1, 4, 4, args.zdim]), name='seed')
+        self.args = args
 
-        self.style_conv = StyleConv2D(args, args.zdim, hdim)
-        self.noise = LearnableNoise(args, hdim)
-        self.act = layers.LeakyReLU(0.2)
+    def build(self, input_shape):
+        super().build(input_shape)
+        self.seed = self.add_weight('seed', shape=[1, 4, 4, self.args.zdim], trainable=True)
 
     def call(self, z):
         bsz = len(z)
-        img = tf.tile(self.seed, [bsz, 1, 1, 1])
+        img = tf.repeat(self.seed, bsz, axis=0)
+        return img
 
+
+class FirstStyleSynthBlock(layers.Layer):
+    def __init__(self, args, hdim, name):
+        super().__init__(name=name)
+        self.style_conv = StyleConv2D(args, args.zdim, hdim, 'style-conv')
+        self.noise = LearnableNoise(args, hdim, 'noise')
+        self.act = layers.LeakyReLU(0.2)
+
+    def call(self, input):
+        img, z = input
         img = self.style_conv((img, z))
         img = self.noise(img)
         img = self.act(img)
@@ -55,15 +66,15 @@ class FirstStyleSynthBlock(layers.Layer):
 
 
 class HiddenStyleSynthBlock(layers.Layer):
-    def __init__(self, args, in_c, out_c, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, args, in_c, out_c, name):
+        super().__init__(name=name)
         self.upsampling = layers.UpSampling2D(interpolation='bilinear')
 
-        self.style_conv1 = StyleConv2D(args, in_c, out_c)
-        self.style_conv2 = StyleConv2D(args, out_c, out_c)
+        self.style_conv1 = StyleConv2D(args, in_c, out_c, 'style-conv1')
+        self.style_conv2 = StyleConv2D(args, out_c, out_c, 'style-conv2')
 
-        self.noise1 = LearnableNoise(args, out_c)
-        self.noise2 = LearnableNoise(args, out_c)
+        self.noise1 = LearnableNoise(args, out_c, 'noise1')
+        self.noise2 = LearnableNoise(args, out_c, 'noise2')
 
         self.act = layers.LeakyReLU(0.2)
 
@@ -124,7 +135,9 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name=f'first-style-synth-block{start_hidx - 1}')(z)
+        img = ConstBlock(args, 'const-block')(z)
+        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name=f'first-style-synth-block{start_hidx - 1}')(
+            (img, z))
 
         # Hidden blocks
         for i in range(start_hidx - 1, len(hdims) - 1):
