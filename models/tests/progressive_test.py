@@ -14,7 +14,7 @@ class ProgressiveCheckpoints(unittest.TestCase):
         args_16x16 = '--imsize=16 --model=gan --bsz=32 --zdim=32 --hdim=64 --synth=style --encoder=conv '
         args_16x16 = utils.parser.parse_args(args_16x16.split())
         utils.setup(args_16x16)
-        model_16x16 = models.make_model(args_16x16, img_c=3)
+        model_16x16 = models.make_model(args_16x16, img_c=3, summarize=False)
 
         # "Pretrain"
         for w in model_16x16.weights:
@@ -23,7 +23,7 @@ class ProgressiveCheckpoints(unittest.TestCase):
         model_16x16.disc.save_weights('out/disc.h5')
 
         # Assert load and saving with same image size works
-        model_16x16_2 = models.make_model(args_16x16, img_c=3)
+        model_16x16_2 = models.make_model(args_16x16, img_c=3, summarize=False)
         model_16x16_2.gen.load_weights('out/gen.h5', by_name=True)
         model_16x16_2.disc.load_weights('out/disc.h5', by_name=True)
         for a, b in zip(model_16x16.weights, model_16x16_2.weights):
@@ -33,7 +33,7 @@ class ProgressiveCheckpoints(unittest.TestCase):
         args_32x32 = '--imsize=32 --model=gan --bsz=32 --zdim=32 --hdim=64 --synth=style --encoder=conv '
         args_32x32 = utils.parser.parse_args(args_32x32.split())
         utils.setup(args_32x32)
-        model_32x32 = models.make_model(args_32x32, img_c=3)
+        model_32x32 = models.make_model(args_32x32, img_c=3, summarize=False)
         # Assert that we can load weights without error
         model_32x32.gen.load_weights('out/gen.h5', by_name=True)
         model_32x32.disc.load_weights('out/disc.h5', by_name=True)
@@ -52,7 +52,7 @@ class ProgressiveCheckpoints(unittest.TestCase):
         args_bad = '--imsize=32 --model=gan --bsz=32 --zdim=64 --hdim=16 --synth=style --encoder=conv '
         args_bad = utils.parser.parse_args(args_bad.split())
         utils.setup(args_bad)
-        model_bad = models.make_model(args_bad, img_c=3)
+        model_bad = models.make_model(args_bad, img_c=3, summarize=False)
         # Assert that we throw an error from different dimensions
         self.assertRaises(ValueError, lambda: model_bad.gen.load_weights('out/gen.h5', by_name=True))
         self.assertRaises(ValueError, lambda: model_bad.disc.load_weights('out/disc.h5', by_name=True))

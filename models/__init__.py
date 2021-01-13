@@ -10,7 +10,7 @@ from models.style_content import SC_VGG19
 from models.synthesis import FirstStyleSynthBlock, HiddenStyleSynthBlock, synthesize
 
 
-def make_model(args, img_c):
+def make_model(args, img_c, summarize=True):
     if args.model == 'autoencoder':
         # Autoencoder
         img = keras.Input((args.imsize, args.imsize, img_c), name='img-in')
@@ -20,7 +20,8 @@ def make_model(args, img_c):
 
         model = keras.Model(img, recon, name='autoencoder')
         model.compile(optimizer=keras.optimizers.Adam(args.ae_lr))
-        model.summary()
+        if summarize:
+            model.summary()
 
         # load weights?
         if args.load:
@@ -35,13 +36,15 @@ def make_model(args, img_c):
         z = LatentMap(args)(gen_in)
         gen_out = synthesize(args, z, img_c)
         gen = keras.Model(gen_in, gen_out, name='generator')
-        gen.summary()
 
         # Discriminator
         disc_in = keras.Input((args.imsize, args.imsize, img_c), name='disc-in')
         disc_out = encode(args, disc_in, out_dim=1)
         disc = keras.Model(disc_in, disc_out, name='discriminator')
-        disc.summary()
+
+        if summarize:
+            gen.summary()
+            disc.summary()
 
         # GAN
         model = GAN(args, gen, disc)
