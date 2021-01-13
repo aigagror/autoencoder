@@ -36,9 +36,9 @@ class StyleConv2D(layers.Layer):
 
 
 class FirstStyleSynthBlock(layers.Layer):
-    def __init__(self, args, hdim, **kwargs):
-        super().__init__(**kwargs)
-        self.seed = tf.Variable(tf.random.normal([1, 4, 4, args.zdim]), name=self.name + '/seed')
+    def __init__(self, args, hdim, name):
+        super().__init__(name=name)
+        self.seed = tf.Variable(tf.random.normal([1, 4, 4, args.zdim]), name='seed')
 
         self.style_conv = StyleConv2D(args, args.zdim, hdim)
         self.noise = LearnableNoise(args, hdim)
@@ -98,7 +98,7 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        prefix = f'first-synth-block{start_hidx-1}'
+        prefix = f'first-conv-synth-block{start_hidx - 1}'
         img = keras.Sequential([
             layers.Conv2DTranspose(args.hdim, kernel_size=4, name=f'{prefix}-convt'),
             layers.LeakyReLU(0.2)
@@ -106,7 +106,7 @@ def synthesize(args, z, img_c):
 
         # Hidden blocks
         for i in range(start_hidx, len(hdims)):
-            prefix = f'hidden-synth-block{i}'
+            prefix = f'hidden-conv-synth-block{i}'
             img = keras.Sequential([
                 layers.UpSampling2D(interpolation='bilinear'),
 
@@ -124,11 +124,11 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name=f'first-synth-block{start_hidx-1}')(z)
+        img = FirstStyleSynthBlock(args, hdims[start_hidx - 1], name=f'first-style-synth-block{start_hidx - 1}')(z)
 
         # Hidden blocks
         for i in range(start_hidx - 1, len(hdims) - 1):
-            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'hidden-synth-block{i}')((img, z))
+            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'hidden-style-synth-block{i}')((img, z))
 
         # To image
         img = layers.Conv2D(img_c, 1, activation='tanh', name='to-img')(img)
