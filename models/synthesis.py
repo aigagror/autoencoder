@@ -151,7 +151,7 @@ def synthesize(args, z, img_c):
                 break
 
         # To image
-        img = layers.Conv2D(img_c, 1, activation='tanh', name=f'{hdims[i]}-to-img')(img)
+        img = layers.Conv2D(img_c, 1, activation='tanh', name=f'{hdims[i + 1]}-to-img')(img)
 
     else:
         raise Exception(f'unknown synthesis network: {args.synthesis}')
