@@ -6,7 +6,6 @@ class MyMSELoss(layers.Layer):
     def call(self, inputs):
         img, recon = inputs
         mse = losses.mse(img, recon)
-        mse = tf.reduce_mean(mse)
         self.add_loss(mse)
         self.add_metric(mse, 'mse')
         return recon
@@ -15,7 +14,6 @@ class MyMSELoss(layers.Layer):
 class FooLoss(layers.Layer):
     def call(self, img):
         loss = tf.reduce_sum(img ** 2, axis=[1, 2, 3])
-        loss = tf.reduce_mean(loss)
         self.add_loss(loss)
         return img
 
