@@ -22,10 +22,12 @@ class StyleContent(keras.Model):
         style_layer_losses = [bn_loss(t, g) for t, g in
                               zip(target_feats['style'], gen_feats['style'])]
         style_loss = sum(style_layer_losses) / len(style_layer_losses)
+        style_loss = tf.reduce_mean(style_layer_losses)
 
         # Content loss
         content_loss = losses.mse(target_feats['content'], gen_feats['content'])
         content_loss = tf.reduce_mean(content_loss, axis=[1, 2])
+        content_loss = tf.reduce_mean(content_loss)
 
         self.add_loss(content_loss + 0.1 * style_loss)
         self.add_metric(style_loss, 'style-loss')
