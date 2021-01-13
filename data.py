@@ -61,7 +61,7 @@ def load_datasets(args):
         ds_train
             .shuffle(1024)
             .batch(args.bsz, drop_remainder=True)
-            .prefetch(tf.data.AUTOTUNE).repeat()
+            .prefetch(tf.data.AUTOTUNE)
     )
 
     ds_val = (
