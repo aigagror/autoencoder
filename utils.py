@@ -24,9 +24,9 @@ parser.add_argument('--alpha', type=float)
 
 # Training
 parser.add_argument('--epochs', type=int)
-parser.add_argument('--ae-lr', type=float)
-parser.add_argument('--gen-lr', type=float)
-parser.add_argument('--disc-lr', type=float)
+parser.add_argument('--ae-lr', type=float, default=1e-3)
+parser.add_argument('--gen-lr', type=float, default=1e-3)
+parser.add_argument('--disc-lr', type=float, default=1e-3)
 parser.add_argument('--bsz', type=int)
 
 # Save
