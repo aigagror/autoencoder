@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import tensorflow_addons as tfa
 
 def encode(args, img, out_dim):
     if args.encoder == 'affine':
@@ -14,7 +15,7 @@ def encode(args, img, out_dim):
         prefix = 'first-encode-block'
         output = keras.Sequential([
             layers.Conv2D(16, 1, name=f'{prefix}-conv'),
-            layers.LayerNormalization([1, 2, 3], center=False, scale=False),
+            tfa.layers.GroupNormalization(groups=1, name=f'{prefix}-norm'),
             layers.LeakyReLU(0.2)
         ], prefix)(img)
 
@@ -27,10 +28,10 @@ def encode(args, img, out_dim):
             in_h, out_h = hdims[i], hdims[i + 1]
             output = keras.Sequential([
                 layers.Conv2D(in_h, 3, padding='same', name=f'{prefix}-conv1'),
-                layers.LayerNormalization([1, 2, 3], center=False, scale=False),
+                tfa.layers.GroupNormalization(groups=1, name=f'{prefix}-norm1'),
                 layers.LeakyReLU(0.2),
                 layers.Conv2D(out_h, 3, padding='same', name=f'{prefix}-conv2'),
-                layers.LayerNormalization([1, 2, 3], center=False, scale=False),
+                tfa.layers.GroupNormalization(groups=1, name=f'{prefix}-norm2'),
                 layers.LeakyReLU(0.2),
                 layers.AveragePooling2D(),
             ], prefix)(output)
@@ -41,10 +42,10 @@ def encode(args, img, out_dim):
         prefix = f'last-encode-block{i}'
         output = keras.Sequential([
             layers.Conv2D(out_h, 3, padding='same', name=f'{prefix}-conv1'),
-            layers.LayerNormalization([1, 2, 3], center=False, scale=False),
+            tfa.layers.GroupNormalization(groups=1, name=f'{prefix}-norm1'),
             layers.LeakyReLU(0.2),
             layers.Conv2D(out_h, 4, padding='valid', name=f'{prefix}-conv2'),
-            layers.LayerNormalization([1, 2, 3], center=False, scale=False),
+            tfa.layers.GroupNormalization(groups=1, name=f'{prefix}-norm2'),
             layers.LeakyReLU(0.2),
             layers.Flatten(),
             layers.Dense(out_dim, name=f'{prefix}-dense')
