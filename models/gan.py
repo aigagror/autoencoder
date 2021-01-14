@@ -13,7 +13,6 @@ class GAN(keras.Model):
         self.disc = disc
         self.bce = nn.sigmoid_cross_entropy_with_logits
 
-
     def call(self, imgs):
         return self.gen(imgs)
 
