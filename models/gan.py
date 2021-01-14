@@ -13,6 +13,7 @@ class GAN(keras.Model):
         self.disc = disc
         self.bce = nn.sigmoid_cross_entropy_with_logits
 
+
     def call(self, imgs):
         return self.gen(imgs)
 
@@ -20,6 +21,13 @@ class GAN(keras.Model):
         super().compile()
         self.d_opt = d_opt
         self.g_opt = g_opt
+
+        self.mean_metrics = [
+            keras.metrics.Mean('bce'),
+            keras.metrics.Mean('r1'),
+            keras.metrics.Mean('d-real'),
+            keras.metrics.Mean('d-gen'),
+        ]
 
     def disc_step(self, img):
         gen = self.gen(img)
@@ -60,5 +68,17 @@ class GAN(keras.Model):
         bce, r1, d_real, d_gen = self.disc_step(img)
         self.gen_step(img)
 
-        print(bce)
-        return {'bce': bce, 'r1': r1, 'd-real': d_real, 'd-gen': d_gen}
+        # Assumes the listed metrics are in the right order
+        for metric, val in zip(self.metrics, [bce, r1, d_real, d_gen]):
+            metric.update_state(val)
+
+        return {m.name: m.result() for m in self.metrics}
+
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch
+        # or at the start of `evaluate()`.
+        # If you don't implement this property, you have to call
+        # `reset_states()` yourself at the time of your choosing.
+        return self.mean_metrics
