@@ -10,8 +10,8 @@ def plot_sample_images(model, ds):
     imgs = next(iter(ds))
     recons = model(imgs)
 
-    imgs = imgs[:4]
-    recons = recons[:4]
+    imgs = tf.cast(imgs[:4], tf.uint8)
+    recons = tf.cast(recons[:4], tf.uint8)
 
     ret = imgs, recons
 
