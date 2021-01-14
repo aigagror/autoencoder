@@ -61,9 +61,12 @@ class ProgressiveGANCheckpoint(keras.callbacks.Callback):
 
 
 def train(args, model, ds_train, ds_val):
-    # Reset log data?
+    # Reset data?
     if not args.load:
-        shutil.rmtree(os.path.join(args.out, 'train'), ignore_errors=True)
+        if args.out.startswith('gs://'):
+            os.system(f'gsutil -m rm -rf {args.out}')
+        else:
+            shutil.rmtree(args.out, ignore_errors=True)
 
     # Callbacks
     callbacks = [
