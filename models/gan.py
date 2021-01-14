@@ -50,6 +50,7 @@ class GAN(keras.Model):
             gen = self.gen(img)
             disc_gen_logits = self.disc(gen)
             loss = self.bce(tf.ones_like(disc_gen_logits), disc_gen_logits)
+            loss = nn.compute_average_loss(loss, global_batch_size=self.bsz)
 
         g_grad = tape.gradient(loss, self.gen.trainable_weights)
         self.g_opt.apply_gradients(zip(g_grad, self.gen.trainable_weights))
@@ -58,9 +59,7 @@ class GAN(keras.Model):
         bce, r1, d_real, d_gen = self.disc_step(img)
         self.gen_step(img)
 
-        # Cast to float incase of mixed precision
-        bce = tf.cast(bce, tf.float32)
-        r1 = tf.cast(r1, tf.float32)
-        d_real = tf.cast(d_real, tf.float32)
-        d_gen = tf.cast(d_gen, tf.float32)
-        return {'bce': bce, 'r1': r1, 'd-real': d_real, 'd-gen': d_gen}
+        self.add_metric(bce, 'bce')
+        self.add_metric(r1, 'r1')
+        self.add_metric(d_real, 'd_real')
+        self.add_metric(d_gen, 'd_gen')
