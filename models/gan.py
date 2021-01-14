@@ -68,8 +68,9 @@ class GAN(keras.Model):
         self.gen_step(img)
 
         # Assumes the listed metrics are in the right order
+        num_replicas = self.distribute_strategy.num_replicas_in_sync
         for metric, val in zip(self.metrics, [bce, r1, d_real, d_gen]):
-            metric.update_state(val)
+            metric.update_state(val * num_replicas)
 
         return {m.name: m.result() for m in self.metrics}
 

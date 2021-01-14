@@ -69,7 +69,6 @@ def train(args, model, ds_train, ds_val):
             shutil.rmtree(args.out, ignore_errors=True)
             os.mkdir(args.out)
 
-
     # Callbacks
     callbacks = [
         keras.callbacks.TensorBoard(args.out, histogram_freq=1, update_freq=32),
