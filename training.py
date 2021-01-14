@@ -64,9 +64,11 @@ def train(args, model, ds_train, ds_val):
     # Reset data?
     if not args.load:
         if args.out.startswith('gs://'):
-            os.system(f'gsutil -m rm -rf {args.out}')
+            os.system(f"gsutil -m rm {os.path.join(args.out, '**')}")
         else:
             shutil.rmtree(args.out, ignore_errors=True)
+            os.mkdir(args.out)
+
 
     # Callbacks
     callbacks = [
