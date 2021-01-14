@@ -60,7 +60,4 @@ class GAN(keras.Model):
         bce, r1, d_real, d_gen = self.disc_step(img)
         self.gen_step(img)
 
-        self.add_metric(bce, 'bce')
-        self.add_metric(r1, 'r1')
-        self.add_metric(d_real, 'd_real')
-        self.add_metric(d_gen, 'd_gen')
+        return {'bce': bce, 'r1': r1, 'd-real': d_real, 'd-gen': d_gen}
