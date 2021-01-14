@@ -78,7 +78,7 @@ def train(args, model, ds_train, ds_val):
     if args.model == 'autoencoder':
         model_path = os.path.join(args.out, 'model')
         callbacks.append(keras.callbacks.ModelCheckpoint(model_path, save_weights_only=True))
-    elif args.model == 'gan':
+    elif args.model == 'gan' and not args.tpu:
         callbacks.append(ProgressiveGANCheckpoint(args))
 
     # Train
