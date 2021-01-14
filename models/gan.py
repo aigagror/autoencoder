@@ -58,4 +58,9 @@ class GAN(keras.Model):
         bce, r1, d_real, d_gen = self.disc_step(img)
         self.gen_step(img)
 
+        # Cast to float incase of mixed precision
+        bce = tf.cast(bce, tf.float32)
+        r1 = tf.cast(r1, tf.float32)
+        d_real = tf.cast(d_real, tf.float32)
+        d_gen = tf.cast(d_gen, tf.float32)
         return {'bce': bce, 'r1': r1, 'd-real': d_real, 'd-gen': d_gen}
