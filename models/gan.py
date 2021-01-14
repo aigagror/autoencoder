@@ -61,7 +61,7 @@ class GAN(keras.Model):
         self.gen_step(img)
 
         # Reduce incase of distributed training
-        strategy = tf.distribute.get_strategy()
+        strategy = self.distribute_strategy
         bce = strategy.reduce('SUM', bce, axis=None)
         r1 = strategy.reduce('SUM', r1, axis=None)
         d_real = strategy.reduce('SUM', d_real, axis=None)
