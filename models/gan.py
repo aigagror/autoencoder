@@ -60,7 +60,17 @@ class GAN(keras.Model):
         bce, r1, d_real, d_gen = self.disc_step(img)
         self.gen_step(img)
 
-        self.add_metric(tf.cast(bce, tf.float32), 'bce')
-        self.add_metric(tf.cast(r1, tf.float32), 'r1')
-        self.add_metric(tf.cast(d_real, tf.float32), 'd_real')
-        self.add_metric(tf.cast(d_gen, tf.float32), 'd_gen')
+        # Reduce incase of distributed training
+        strategy = tf.distribute.get_strategy()
+        bce = strategy.reduce('SUM', bce, axis=None)
+        r1 = strategy.reduce('SUM', r1, axis=None)
+        d_real = strategy.reduce('SUM', d_real, axis=None)
+        d_gen = strategy.reduce('SUM', d_gen, axis=None)
+
+        # Cast to float incase of mixed precision
+        bce = tf.cast(bce, tf.float32)
+        r1 = tf.cast(r1, tf.float32)
+        d_real = tf.cast(d_real, tf.float32)
+        d_gen = tf.cast(d_gen, tf.float32)
+
+        return {'bce': bce, 'r1': r1, 'd-real': d_real, 'd-gen': d_gen}
