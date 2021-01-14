@@ -54,12 +54,13 @@ class GAN(keras.Model):
 
         g_grad = tape.gradient(loss, self.gen.trainable_weights)
         self.g_opt.apply_gradients(zip(g_grad, self.gen.trainable_weights))
+        return loss
 
     def train_step(self, img):
         bce, r1, d_real, d_gen = self.disc_step(img)
         self.gen_step(img)
 
-        self.add_metric(bce, 'bce')
-        self.add_metric(r1, 'r1')
-        self.add_metric(d_real, 'd_real')
-        self.add_metric(d_gen, 'd_gen')
+        self.add_metric(tf.cast(bce, tf.float32), 'bce')
+        self.add_metric(tf.cast(r1, tf.float32), 'r1')
+        self.add_metric(tf.cast(d_real, tf.float32), 'd_real')
+        self.add_metric(tf.cast(d_gen, tf.float32), 'd_gen')
