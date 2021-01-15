@@ -26,6 +26,8 @@ class GAN(keras.Model):
             keras.metrics.Mean('r1'),
             keras.metrics.Mean('d-real'),
             keras.metrics.Mean('d-gen'),
+            keras.metrics.Mean('d-grad-norm'),
+            keras.metrics.Mean('g-grad-norm'),
         ]
 
     def disc_step(self, img):
@@ -50,7 +52,7 @@ class GAN(keras.Model):
         d_real = nn.compute_average_loss(d_real, global_batch_size=self.bsz)
         d_gen = nn.compute_average_loss(d_gen, global_batch_size=self.bsz)
 
-        return bce, r1, d_real, d_gen
+        return bce, r1, d_real, d_gen, tf.norm(grad)
 
     def gen_step(self, img):
         with tf.GradientTape() as tape:
@@ -59,17 +61,17 @@ class GAN(keras.Model):
             loss = self.bce(tf.ones_like(disc_gen_logits), disc_gen_logits)
             loss = nn.compute_average_loss(loss, global_batch_size=self.bsz)
 
-        g_grad = tape.gradient(loss, self.gen.trainable_weights)
-        self.g_opt.apply_gradients(zip(g_grad, self.gen.trainable_weights))
-        return loss
+        grad = tape.gradient(loss, self.gen.trainable_weights)
+        self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
+        return loss, tf.norm(grad)
 
     def train_step(self, img):
-        bce, r1, d_real, d_gen = self.disc_step(img)
-        self.gen_step(img)
+        bce, r1, d_real, d_gen, d_grad_norm = self.disc_step(img)
+        g_grad_norm = self.gen_step(img)
 
         # Assumes the listed metrics are in the right order
         num_replicas = self.distribute_strategy.num_replicas_in_sync
-        for metric, val in zip(self.metrics, [bce, r1, d_real, d_gen]):
+        for metric, val in zip(self.metrics, [bce, r1, d_real, d_gen, d_grad_norm, g_grad_norm]):
             metric.update_state(val * num_replicas)
 
         return {m.name: m.result() for m in self.metrics}
