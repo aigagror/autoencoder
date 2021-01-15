@@ -29,6 +29,9 @@ parser.add_argument('--gen-lr', type=float, default=1e-3)
 parser.add_argument('--disc-lr', type=float, default=1e-3)
 parser.add_argument('--bsz', type=int)
 
+parser.add_argument('--steps-exec', type=int, help='steps per execution')
+parser.add_argument('--steps-epoch', type=int, help='steps per epoch')
+
 # Save
 parser.add_argument('--out', type=str, default='./out')
 parser.add_argument('--load', action='store_true')

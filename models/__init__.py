@@ -19,7 +19,7 @@ def make_model(args, img_c, summarize=True):
         recon = SC_VGG19(args)((img, recon))
 
         model = keras.Model(img, recon, name='autoencoder')
-        model.compile(optimizer=keras.optimizers.Adam(args.ae_lr))
+        model.compile(optimizer=keras.optimizers.Adam(args.ae_lr), steps_per_execution=args.steps_exec)
         if summarize:
             model.summary()
 
@@ -49,7 +49,8 @@ def make_model(args, img_c, summarize=True):
         # GAN
         model = GAN(args, gen, disc)
         model.compile(d_opt=keras.optimizers.Adam(args.disc_lr, clipnorm=2),
-                      g_opt=keras.optimizers.Adam(args.gen_lr, clipnorm=2))
+                      g_opt=keras.optimizers.Adam(args.gen_lr, clipnorm=2),
+                      steps_per_execution=args.steps_exec)
 
         # load weights?
         if args.load:

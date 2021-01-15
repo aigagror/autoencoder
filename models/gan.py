@@ -16,8 +16,8 @@ class GAN(keras.Model):
     def call(self, imgs):
         return self.gen(imgs)
 
-    def compile(self, d_opt, g_opt):
-        super().compile()
+    def compile(self, d_opt, g_opt, **kwargs):
+        super().compile(**kwargs)
         self.d_opt = d_opt
         self.g_opt = g_opt
 
@@ -68,6 +68,7 @@ class GAN(keras.Model):
         grad = tape.gradient(loss, self.gen.trainable_weights)
         grad = [tf.clip_by_norm(g, 2) for g in grad]
         self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
+
         grad_norms = [tf.norm(g) for g in grad]
         grad_norm = nn.compute_average_loss(grad_norms, global_batch_size=self.bsz)
 

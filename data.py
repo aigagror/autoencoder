@@ -71,4 +71,8 @@ def load_datasets(args):
             .prefetch(tf.data.AUTOTUNE)
     )
 
+    if args.steps_epoch is not None:
+        ds_train = ds_train.repeat()
+        print('steps per epoch set. repeating training dataset')
+
     return ds_train, ds_val, img_c
