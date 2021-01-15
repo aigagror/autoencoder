@@ -52,7 +52,9 @@ class GAN(keras.Model):
         d_real = nn.compute_average_loss(d_real, global_batch_size=self.bsz)
         d_gen = nn.compute_average_loss(d_gen, global_batch_size=self.bsz)
 
-        return bce, r1, d_real, d_gen, tf.norm(grad)
+        grad_norms = [tf.norm(g) for g in grad]
+
+        return bce, r1, d_real, d_gen, tf.reduce_mean(grad_norms)
 
     def gen_step(self, img):
         with tf.GradientTape() as tape:
@@ -63,7 +65,8 @@ class GAN(keras.Model):
 
         grad = tape.gradient(loss, self.gen.trainable_weights)
         self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
-        return loss, tf.norm(grad)
+        grad_norms = [tf.norm(g) for g in grad]
+        return loss, tf.reduce_mean(grad_norms)
 
     def train_step(self, img):
         bce, r1, d_real, d_gen, d_grad_norm = self.disc_step(img)
