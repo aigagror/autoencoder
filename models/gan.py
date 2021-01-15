@@ -53,8 +53,8 @@ class GAN(keras.Model):
         d_real = nn.compute_average_loss(d_real, global_batch_size=self.bsz)
         d_gen = nn.compute_average_loss(d_gen, global_batch_size=self.bsz)
 
-        grad_norms = [tf.norm(g) for g in grad]
-        grad_norm = nn.compute_average_loss(grad_norms, global_batch_size=self.bsz)
+        all_grad_norms = [tf.norm(g) for g in grad]
+        grad_norm = nn.compute_average_loss(all_grad_norms, global_batch_size=self.bsz)
 
         return bce, r1, d_real, d_gen, grad_norm
 
@@ -69,8 +69,8 @@ class GAN(keras.Model):
         grad = [tf.clip_by_norm(g, 2) for g in grad]
         self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
 
-        grad_norms = [tf.norm(g) for g in grad]
-        grad_norm = nn.compute_average_loss(grad_norms, global_batch_size=self.bsz)
+        all_grad_norms = [tf.norm(g) for g in grad]
+        grad_norm = nn.compute_average_loss(all_grad_norms, global_batch_size=self.bsz)
 
         return loss, grad_norm
 
