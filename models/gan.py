@@ -45,6 +45,7 @@ class GAN(keras.Model):
             loss = bce + self.r1_weight * r1
 
         grad = tape.gradient(loss, self.disc.trainable_weights)
+        grad = [tf.clip_by_norm(g, 2) for g in grad]
         self.d_opt.apply_gradients(zip(grad, self.disc.trainable_weights))
 
         # Discriminator probabilities
@@ -64,6 +65,7 @@ class GAN(keras.Model):
             loss = nn.compute_average_loss(loss, global_batch_size=self.bsz)
 
         grad = tape.gradient(loss, self.gen.trainable_weights)
+        grad = [tf.clip_by_norm(g, 2) for g in grad]
         self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
         grad_norms = [tf.norm(g) for g in grad]
         return loss, tf.reduce_mean(grad_norms)
