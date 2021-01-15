@@ -30,7 +30,7 @@ parser.add_argument('--disc-lr', type=float, default=1e-3)
 parser.add_argument('--bsz', type=int)
 
 # Save
-parser.add_argument('--out', type=str)
+parser.add_argument('--out', type=str, default='./out')
 parser.add_argument('--load', action='store_true')
 
 # Strategy
