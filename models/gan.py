@@ -24,8 +24,8 @@ class GAN(keras.Model):
         self.mean_metrics = [
             keras.metrics.Mean('bce'),
             keras.metrics.Mean('r1'),
-            keras.metrics.Mean('d-real'),
-            keras.metrics.Mean('d-gen'),
+            keras.metrics.Mean('real-acc'),
+            keras.metrics.Mean('gen-acc'),
             keras.metrics.Mean('d-grad-norm'),
             keras.metrics.Mean('g-grad-norm'),
         ]
@@ -34,9 +34,11 @@ class GAN(keras.Model):
         gen = self.gen(img)
         with tf.GradientTape() as tape:
             d_real_logits, d_gen_logits = self.disc(img), self.disc(gen)
+            real_labels = tf.ones_like(d_real_logits)
+            gen_labels = tf.zeros_like(d_gen_logits)
 
-            real_loss = self.bce(tf.ones_like(d_real_logits), d_real_logits)
-            gen_loss = self.bce(tf.zeros_like(d_gen_logits), d_gen_logits)
+            real_loss = self.bce(real_labels, d_real_logits)
+            gen_loss = self.bce(gen_labels, d_gen_logits)
             bce = real_loss + gen_loss
             bce = nn.compute_average_loss(bce, global_batch_size=self.bsz)
 
@@ -49,14 +51,16 @@ class GAN(keras.Model):
         self.d_opt.apply_gradients(zip(grad, self.disc.trainable_weights))
 
         # Discriminator probabilities
-        d_real, d_gen = tf.sigmoid(d_real_logits), tf.sigmoid(d_gen_logits)
-        d_real = nn.compute_average_loss(d_real, global_batch_size=self.bsz)
-        d_gen = nn.compute_average_loss(d_gen, global_batch_size=self.bsz)
+        real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits)
+        gen_acc = keras.metrics.binary_accuracy(gen_labels, d_gen_logits)
+        real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
+        gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
 
+        # Average gradient norms
         all_grad_norms = [tf.norm(g) for g in grad]
         grad_norm = nn.compute_average_loss(all_grad_norms, global_batch_size=self.bsz)
 
-        return bce, r1, d_real, d_gen, grad_norm
+        return bce, r1, real_acc, gen_acc, grad_norm
 
     def gen_step(self, img):
         with tf.GradientTape() as tape:
