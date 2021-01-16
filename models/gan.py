@@ -40,8 +40,10 @@ class GAN(keras.Model):
             real_labels = tf.ones_like(d_real_logits)
             gen_labels = tf.zeros_like(d_gen_logits)
 
-            real_loss = self.bce(real_labels, d_real_logits)
-            gen_loss = self.bce(gen_labels, d_gen_logits)
+            noisy_real_labels = real_labels + 0.05 * tf.random.uniform(tf.shape(real_labels))
+            noisy_gen_labels = gen_labels + 0.05 * tf.random.uniform(tf.shape(gen_labels))
+            real_loss = self.bce(noisy_real_labels, d_real_logits)
+            gen_loss = self.bce(noisy_gen_labels, d_gen_logits)
             bce = real_loss + gen_loss
             bce = nn.compute_average_loss(bce, global_batch_size=self.bsz)
 
