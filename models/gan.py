@@ -58,7 +58,8 @@ class GAN(keras.Model):
 
         # Average gradient norms
         all_grad_norms = [tf.norm(g) for g in grad]
-        grad_norm = nn.compute_average_loss(all_grad_norms, global_batch_size=self.bsz)
+        grad_norm = tf.reduce_mean(all_grad_norms)
+        grad_norm = nn.compute_average_loss(grad_norm, global_batch_size=self.bsz)
 
         return bce, r1, real_acc, gen_acc, grad_norm
 
@@ -74,7 +75,8 @@ class GAN(keras.Model):
         self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
 
         all_grad_norms = [tf.norm(g) for g in grad]
-        grad_norm = nn.compute_average_loss(all_grad_norms, global_batch_size=self.bsz)
+        grad_norm = tf.reduce_mean(all_grad_norms)
+        grad_norm = nn.compute_average_loss(grad_norm, global_batch_size=self.bsz)
 
         return loss, grad_norm
 
