@@ -13,8 +13,8 @@ parser.add_argument('--imsize', type=int)
 parser.add_argument('--model', choices=['autoencoder', 'gan'])
 parser.add_argument('--zdim', type=int, default=512)
 parser.add_argument('--hdim', type=int, default=512)
-parser.add_argument('--encoder', choices=['affine', 'conv'])
-parser.add_argument('--synthesis', choices=['affine', 'conv', 'style'])
+parser.add_argument('--encoder', choices=['affine', 'conv'], default='conv')
+parser.add_argument('--synthesis', choices=['affine', 'conv', 'style'], default='style')
 parser.add_argument('--r1', type=float)
 
 # Style Content Model
