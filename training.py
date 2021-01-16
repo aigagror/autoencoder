@@ -66,7 +66,7 @@ def train(args, model, ds_train, ds_val):
         if args.out.startswith('gs://'):
             os.system(f"gsutil -m rm {os.path.join(args.out, '**')}")
         else:
-            shutil.rmtree(args.out, ignore_errors=True)
+            shutil.rmtree(args.out)
             os.mkdir(args.out)
 
     # Callbacks
