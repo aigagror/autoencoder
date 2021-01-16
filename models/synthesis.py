@@ -1,4 +1,3 @@
-import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow import keras
@@ -14,7 +13,8 @@ class StyleConv2D(layers.Layer):
         self.in_scale = layers.Conv2D(in_c, 1, name='in-scale')
         self.in_bias = layers.Conv2D(in_c, 1, name='in-bias')
 
-        self.conv = layers.Conv2D(out_c, 3, padding='same', use_bias=False, name='style')
+        self.conv = tfa.layers.SpectralNormalization(layers.Conv2D(out_c, 3, padding='same', use_bias=False),
+                                                     name='style')
         self.norm = tfa.layers.InstanceNormalization(name='norm')
 
     def call(self, input):
@@ -151,7 +151,8 @@ def synthesize(args, z, img_c):
                 break
 
         # To image
-        img = layers.Conv2D(img_c, 1, activation='tanh', name=f'{hdims[i + 1]}-to-img')(img)
+        img = tfa.layers.SpectralNormalization(layers.Conv2D(img_c, 1, activation='tanh'),
+                                               name=f'{hdims[i + 1]}-to-img')(img)
 
     else:
         raise Exception(f'unknown synthesis network: {args.synthesis}')
