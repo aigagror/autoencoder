@@ -27,7 +27,11 @@ class ProgressiveCheckpoints(unittest.TestCase):
         model_16x16_2.gen.load_weights('out/gen.h5', by_name=True)
         model_16x16_2.disc.load_weights('out/disc.h5', by_name=True)
         for a, b in zip(model_16x16.weights, model_16x16_2.weights):
-            np.testing.assert_allclose(a.numpy(), b.numpy())
+            self.assertEqual(a.name, b.name)
+            if a.name == 'total:0' or a.name == 'count:0':
+                # Metric variable
+                continue
+            np.testing.assert_allclose(a.numpy(), b.numpy(), err_msg=a.name)
 
         # Now progress to 32x32
         args_32x32 = '--imsize=32 --model=gan --bsz=32 --synth=style --encoder=conv '
@@ -39,6 +43,9 @@ class ProgressiveCheckpoints(unittest.TestCase):
         model_32x32.disc.load_weights('out/disc.h5', by_name=True)
         for trained_weight in model_16x16.weights:
             name = trained_weight.name
+            if name == 'total:0' or name == 'count:0':
+                # Metric variables
+                continue
             # Find the weight
             found = False
             for weight in model_32x32.weights:
