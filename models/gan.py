@@ -26,6 +26,9 @@ class GAN(keras.Model):
             keras.metrics.Mean('r1'),
             keras.metrics.Mean('real-acc'),
             keras.metrics.Mean('gen-acc'),
+        ]
+
+        self.norm_metrics = [
             keras.metrics.Mean('d-grad-norm'),
             keras.metrics.Mean('g-grad-norm'),
         ]
@@ -56,10 +59,9 @@ class GAN(keras.Model):
         real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
         gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
 
-        # Average gradient norms
+        # Measure average gradient norms
         all_grad_norms = [tf.norm(g) for g in grad]
         grad_norm = tf.reduce_mean(all_grad_norms)
-        grad_norm = nn.compute_average_loss(grad_norm, global_batch_size=self.bsz)
 
         return bce, r1, real_acc, gen_acc, grad_norm
 
@@ -74,9 +76,9 @@ class GAN(keras.Model):
         grad = [tf.clip_by_norm(g, 2) for g in grad]
         self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
 
+        # Measure average gradient norms
         all_grad_norms = [tf.norm(g) for g in grad]
         grad_norm = tf.reduce_mean(all_grad_norms)
-        grad_norm = nn.compute_average_loss(grad_norm, global_batch_size=self.bsz)
 
         return loss, grad_norm
 
@@ -86,8 +88,11 @@ class GAN(keras.Model):
 
         # Assumes the listed metrics are in the right order
         num_replicas = self.distribute_strategy.num_replicas_in_sync
-        for metric, val in zip(self.metrics, [bce, r1, d_real, d_gen, d_grad_norm, g_grad_norm]):
-            metric.update_state(val * num_replicas)
+        for mean_metric, val in zip(self.mean_metrics, [bce, r1, d_real, d_gen]):
+            mean_metric.update_state(val * num_replicas)
+
+        for norm_metric, val in zip(self.norm_metrics, [d_grad_norm, g_grad_norm]):
+            norm_metric.update_state(val)
 
         return {m.name: m.result() for m in self.metrics}
 
@@ -98,4 +103,4 @@ class GAN(keras.Model):
         # or at the start of `evaluate()`.
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
-        return self.mean_metrics
+        return self.mean_metrics + self.norm_metrics
