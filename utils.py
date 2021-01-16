@@ -21,6 +21,7 @@ parser.add_argument('--r1', type=float)
 parser.add_argument('--style-layer', type=int)
 parser.add_argument('--content-layer', type=int)
 parser.add_argument('--alpha', type=float)
+parser.add_argument('--train-last', action='store_true')
 
 # Training
 parser.add_argument('--epochs', type=int)

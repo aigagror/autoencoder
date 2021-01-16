@@ -42,6 +42,11 @@ def make_model(args, img_c, summarize=True):
         disc_out = encode(args, disc_in, out_dim=1)
         disc = keras.Model(disc_in, disc_out, name='discriminator')
 
+        # Freeze all but the last layers of the two sub nets?
+        if args.train_last:
+            for layer in gen.layers + disc.layers:
+                layer.trainable = layer.name.startswith('last')
+
         if summarize:
             gen.summary()
             disc.summary()
