@@ -11,7 +11,7 @@ class StepTests(unittest.TestCase):
     def setUp(self) -> None:
         args = '--data=mnist --imsize=32 ' \
                '--model=gan --encoder=conv --synthesis=style --hdim=32 --zdim=32 ' \
-               '--epochs=30 --bsz=128 ' \
+               '--epochs=30 --bsz=8 ' \
                '--r1=1 '
         self.args = utils.parser.parse_args(args.split())
         utils.setup(self.args)
@@ -21,15 +21,15 @@ class StepTests(unittest.TestCase):
         gan = models.make_model(self.args, img_c, summarize=False)
 
         img = next(iter(ds_train))
-        vals = gan.disc_step(img)
-        for v in vals:
+        disc_vals = gan.disc_step(img)
+        gen_vals = gan.gen_step(img)
+
+        self.assertIsInstance(disc_vals, tuple)
+        self.assertIsInstance(gen_vals, tuple)
+        for v in disc_vals + gen_vals:
             tf.debugging.assert_shapes([
                 (v, [])
             ])
-        gen_loss = gan.gen_step(img)
-        tf.debugging.assert_shapes([
-            (gen_loss, [])
-        ])
 
 if __name__ == '__main__':
     unittest.main()
