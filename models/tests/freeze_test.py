@@ -14,10 +14,10 @@ class FreezeTest(unittest.TestCase):
         utils.setup(self.args)
         gan = models.make_model(self.args, 3, summarize=False)
         for layer in gan.gen.layers + gan.disc.layers:
-            if layer.name.startswith('last'):
-                self.assertTrue(layer.trainable)
+            if layer.name.startswith('last') or layer.name.endswith('to-img'):
+                self.assertTrue(layer.trainable, layer.name)
             else:
-                self.assertFalse(layer.trainable)
+                self.assertFalse(layer.trainable, layer.name)
 
     def test_full_train(self):
         args = '--imsize=32 ' \
@@ -28,7 +28,7 @@ class FreezeTest(unittest.TestCase):
         utils.setup(self.args)
         gan = models.make_model(self.args, 3, summarize=False)
         for layer in gan.layers:
-            self.assertTrue(layer.trainable)
+            self.assertTrue(layer.trainable, layer.name)
 
 
 if __name__ == '__main__':

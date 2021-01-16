@@ -45,7 +45,7 @@ def make_model(args, img_c, summarize=True):
         # Freeze all but the last layers of the two sub nets?
         if args.train_last:
             for layer in gen.layers + disc.layers:
-                layer.trainable = layer.name.startswith('last')
+                layer.trainable = layer.name.startswith('last') or layer.name.endswith('to-img')
 
         if summarize:
             gen.summary()
