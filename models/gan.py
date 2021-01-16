@@ -84,7 +84,7 @@ class GAN(keras.Model):
 
     def train_step(self, img):
         bce, r1, d_real, d_gen, d_grad_norm = self.disc_step(img)
-        g_grad_norm = self.gen_step(img)
+        _, g_grad_norm = self.gen_step(img)
 
         # Assumes the listed metrics are in the right order
         num_replicas = self.distribute_strategy.num_replicas_in_sync
