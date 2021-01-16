@@ -70,8 +70,9 @@ def train(args, model, ds_train, ds_val):
             os.mkdir(args.out)
 
     # Callbacks
+    log_dir = os.path.join(args.out, 'logs')
     callbacks = [
-        keras.callbacks.TensorBoard(args.out, histogram_freq=1, update_freq=32),
+        keras.callbacks.TensorBoard(log_dir, histogram_freq=1, update_freq=32),
         PlotImagesCallback(args, ds_val),
     ]
     if args.model == 'autoencoder':
