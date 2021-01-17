@@ -58,8 +58,8 @@ def make_model(args, img_c, summarize=True):
 
         # GAN
         model = GAN(args, gen, disc)
-        model.compile(d_opt=keras.optimizers.Adam(args.disc_lr, clipnorm=2),
-                      g_opt=keras.optimizers.Adam(args.gen_lr, clipnorm=2),
+        model.compile(d_opt=keras.optimizers.Adam(args.disc_lr),
+                      g_opt=keras.optimizers.Adam(args.gen_lr),
                       steps_per_execution=args.steps_exec)
 
         # load weights?
