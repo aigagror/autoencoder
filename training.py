@@ -56,8 +56,12 @@ class ProgressiveGANCheckpoint(keras.callbacks.Callback):
         self.args = args
 
     def on_epoch_end(self, epoch, logs=None):
-        self.model.gen.save_weights(os.path.join(self.args.out, 'gen.h5'))
-        self.model.disc.save_weights(os.path.join(self.args.out, 'disc.h5'))
+        if self.args.tpu:
+            self.model.gen.save_weights(os.path.join(self.args.out, 'gen'))
+            self.model.disc.save_weights(os.path.join(self.args.out, 'disc'))
+        else:
+            self.model.gen.save_weights(os.path.join(self.args.out, 'gen.h5'))
+            self.model.disc.save_weights(os.path.join(self.args.out, 'disc.h5'))
 
 
 def train(args, model, ds_train, ds_val):
