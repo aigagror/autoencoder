@@ -55,7 +55,7 @@ class FirstStyleSynthBlock(layers.Layer):
         super().__init__(name=name)
         self.style_conv = StyleConv2D(args, args.zdim, hdim, 'style-conv')
         self.noise = LearnableNoise(args, hdim, 'noise')
-        self.act = layers.LeakyReLU(0.2)
+        self.act = layers.LeakyReLU(0.1)
 
     def call(self, input):
         img, z = input
@@ -76,7 +76,7 @@ class HiddenStyleSynthBlock(layers.Layer):
         self.noise1 = LearnableNoise(args, out_c, 'noise1')
         self.noise2 = LearnableNoise(args, out_c, 'noise2')
 
-        self.act = layers.LeakyReLU(0.2)
+        self.act = layers.LeakyReLU(0.1)
 
     def call(self, input):
         img, z = input
@@ -111,7 +111,7 @@ def synthesize(args, z, img_c):
         prefix = f'first-conv-synth-block'
         img = keras.Sequential([
             layers.Conv2DTranspose(args.hdim, kernel_size=4, name=f'{prefix}-convt'),
-            layers.LeakyReLU(0.2)
+            layers.LeakyReLU(0.1)
         ], prefix)(z)
 
         # Hidden blocks
@@ -122,10 +122,10 @@ def synthesize(args, z, img_c):
                 layers.UpSampling2D(interpolation='bilinear'),
 
                 layers.Conv2D(hdims[i], 3, padding='same', name=f'{prefix}-conv1'),
-                layers.LeakyReLU(0.2),
+                layers.LeakyReLU(0.1),
 
                 layers.Conv2D(hdims[i], 3, padding='same', name=f'{prefix}-conv2'),
-                layers.LeakyReLU(0.2),
+                layers.LeakyReLU(0.1),
             ], prefix)(img)
 
             if img.shape[1] == args.imsize:
