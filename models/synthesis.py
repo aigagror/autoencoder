@@ -15,7 +15,7 @@ class StyleConv2D(layers.Layer):
 
         self.conv = tfa.layers.SpectralNormalization(layers.Conv2D(out_c, 3, padding='same', use_bias=False),
                                                      name='style')
-        self.norm = tfa.layers.InstanceNormalization(name='norm')
+        self.norm = layers.BatchNormalization(name='norm')
 
     def call(self, input):
         # latent variable z is expected to be of shape [bsz, 1, 1, zdim]
