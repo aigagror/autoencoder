@@ -10,8 +10,8 @@ class StyleConv2D(layers.Layer):
     def __init__(self, args, in_c, out_c, name):
         super().__init__(name=name)
         self.in_c, self.out_c = in_c, out_c
-        self.in_scale = layers.Conv2D(in_c, 1, name='in-scale')
-        self.in_bias = layers.Conv2D(in_c, 1, name='in-bias')
+        self.in_scale = tfa.layers.SpectralNormalization(layers.Conv2D(in_c, 1), name='in-scale')
+        self.in_bias = tfa.layers.SpectralNormalization(layers.Conv2D(in_c, 1), name='in-bias')
 
         self.conv = tfa.layers.SpectralNormalization(layers.Conv2D(out_c, 3, padding='same', use_bias=False),
                                                      name='style')
