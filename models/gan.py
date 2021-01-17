@@ -18,20 +18,33 @@ class GAN(keras.Model):
 
     def compile(self, d_opt, g_opt, **kwargs):
         super().compile(**kwargs)
+
+        # Optimizers
         self.d_opt = d_opt
         self.g_opt = g_opt
 
-        self.mean_metrics = [
-            keras.metrics.Mean('bce'),
-            keras.metrics.Mean('r1'),
-            keras.metrics.Mean('real-acc'),
-            keras.metrics.Mean('gen-acc'),
-        ]
+        # Metrics
+        self.metrics_dict = {
+            'bce': keras.metrics.Mean('bce'),
+            'r1': keras.metrics.Mean('r1'),
 
-        self.norm_metrics = [
-            keras.metrics.Mean('d-grad-norm'),
-            keras.metrics.Mean('g-grad-norm'),
-        ]
+            'real_prob': keras.metrics.Mean('real_prob'),
+            'gen_prob': keras.metrics.Mean('gen_prob'),
+            'real_acc': keras.metrics.Mean('real_acc'),
+            'gen_acc': keras.metrics.Mean('gen_acc'),
+
+            'd_grad_norm': keras.metrics.Mean('d_grad_norm'),
+            'g_grad_norm': keras.metrics.Mean('g_grad_norm'),
+        }
+
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch
+        # or at the start of `evaluate()`.
+        # If you don't implement this property, you have to call
+        # `reset_states()` yourself at the time of your choosing.
+        return self.metrics_dict.values()
 
     def disc_step(self, img):
         gen = self.gen(img)
@@ -55,16 +68,31 @@ class GAN(keras.Model):
         self.d_opt.apply_gradients(zip(grad, self.disc.trainable_weights))
 
         # Discriminator probabilities
+        real_prob = tf.sigmoid(d_real_logits)
+        gen_prob = tf.sigmoid(d_gen_logits)
+        real_prob = nn.compute_average_loss(real_prob, global_batch_size=self.bsz)
+        gen_prob = nn.compute_average_loss(gen_prob, global_batch_size=self.bsz)
+
+        # Discriminator accuracy
         real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits)
         gen_acc = keras.metrics.binary_accuracy(gen_labels, d_gen_logits)
         real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
         gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
 
         # Measure average gradient norms
+        num_replicas = self.distribute_strategy.num_replicas_in_sync
         all_grad_norms = [tf.norm(g) for g in grad]
-        grad_norm = tf.reduce_mean(all_grad_norms)
+        grad_norm = tf.reduce_mean(all_grad_norms) / num_replicas
 
-        return bce, r1, real_acc, gen_acc, grad_norm
+        # Return metrics
+        info = {
+            'bce': bce, 'r1': r1,
+            'real_prob': real_prob, 'gen_prob': gen_prob,
+            'real_acc': real_acc, 'gen_acc': gen_acc,
+            'd_grad_norm': grad_norm
+        }
+
+        return info
 
     def gen_step(self, img):
         with tf.GradientTape() as tape:
@@ -77,30 +105,20 @@ class GAN(keras.Model):
         self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
 
         # Measure average gradient norms
+        num_replicas = self.distribute_strategy.num_replicas_in_sync
         all_grad_norms = [tf.norm(g) for g in grad]
-        grad_norm = tf.reduce_mean(all_grad_norms)
+        grad_norm = tf.reduce_mean(all_grad_norms) / num_replicas
 
-        return loss, grad_norm
+        return {'g_grad_norm': grad_norm}
 
     def train_step(self, img):
-        bce, r1, d_real, d_gen, d_grad_norm = self.disc_step(img)
-        _, g_grad_norm = self.gen_step(img)
+        d_metrics = self.disc_step(img)
+        g_metrics = self.gen_step(img)
 
-        # Assumes the listed metrics are in the right order
+        # Update metrics
         num_replicas = self.distribute_strategy.num_replicas_in_sync
-        for mean_metric, val in zip(self.mean_metrics, [bce, r1, d_real, d_gen]):
-            mean_metric.update_state(val * num_replicas)
-
-        for norm_metric, val in zip(self.norm_metrics, [d_grad_norm, g_grad_norm]):
-            norm_metric.update_state(val)
+        for metrics in [d_metrics, g_metrics]:
+            for key, val in metrics.items():
+                self.metrics_dict[key].update_state(val * num_replicas)
 
         return {m.name: m.result() for m in self.metrics}
-
-    @property
-    def metrics(self):
-        # We list our `Metric` objects here so that `reset_states()` can be
-        # called automatically at the start of each epoch
-        # or at the start of `evaluate()`.
-        # If you don't implement this property, you have to call
-        # `reset_states()` yourself at the time of your choosing.
-        return self.mean_metrics + self.norm_metrics
