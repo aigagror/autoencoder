@@ -67,15 +67,14 @@ class GAN(keras.Model):
         grad = tape.gradient(loss, self.disc.trainable_weights)
         self.d_opt.apply_gradients(zip(grad, self.disc.trainable_weights))
 
-        # Discriminator probabilities
+        # Discriminator probabilities and accuracies
         real_prob = tf.sigmoid(d_real_logits)
         gen_prob = tf.sigmoid(d_gen_logits)
+        real_acc = keras.metrics.binary_accuracy(real_labels, real_prob)
+        gen_acc = keras.metrics.binary_accuracy(gen_labels, gen_prob)
+
         real_prob = nn.compute_average_loss(real_prob, global_batch_size=self.bsz)
         gen_prob = nn.compute_average_loss(gen_prob, global_batch_size=self.bsz)
-
-        # Discriminator accuracy
-        real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits)
-        gen_acc = keras.metrics.binary_accuracy(gen_labels, d_gen_logits)
         real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
         gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
 
