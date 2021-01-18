@@ -20,7 +20,7 @@ class TestFID(unittest.TestCase):
             b = tf.data.Dataset.from_tensor_slices(255 * tf.random.uniform([10, imsize, imsize, 3])).batch(1)
 
             self.assertAlmostEqual(self.fid_model.fid_score(a, a), 0, delta=1e-3)
-            self.assertGreater(self.fid_model.fid_score(a, b), 50)
+            self.assertGreater(self.fid_model.fid_score(a, b), 10)
 
 
 
