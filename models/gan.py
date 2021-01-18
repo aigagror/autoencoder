@@ -28,10 +28,10 @@ class GAN(keras.Model):
             'bce': keras.metrics.Mean('bce'),
             'r1': keras.metrics.Mean('r1'),
 
-            'real_prob': keras.metrics.Mean('real_prob'),
-            'gen_prob': keras.metrics.Mean('gen_prob'),
             'real_acc': keras.metrics.Mean('real_acc'),
             'gen_acc': keras.metrics.Mean('gen_acc'),
+            'real_prob': keras.metrics.Mean('real_prob'),
+            'gen_prob': keras.metrics.Mean('gen_prob'),
 
             'd_grad_norm': keras.metrics.Mean('d_grad_norm'),
             'g_grad_norm': keras.metrics.Mean('g_grad_norm'),
