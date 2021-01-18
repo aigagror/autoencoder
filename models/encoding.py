@@ -16,6 +16,7 @@ def encode(args, img, out_dim):
         prefix = 'first-encode-block'
         output = keras.Sequential([
             tfa.layers.SpectralNormalization(layers.Conv2D(16, 1), name=f'{prefix}-conv'),
+            layers.BatchNormalization(name=f'{prefix}-norm'),
             layers.LeakyReLU(0.1)
         ], prefix)(img)
 
@@ -29,9 +30,11 @@ def encode(args, img, out_dim):
             output = keras.Sequential([
                 tfa.layers.SpectralNormalization(layers.Conv2D(in_h, 3, padding='same'),
                                                  name=f'{prefix}-conv1'),
+                layers.BatchNormalization(name=f'{prefix}-norm1'),
                 layers.LeakyReLU(0.1),
                 tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 3, padding='same'),
                                                  name=f'{prefix}-conv2'),
+                layers.BatchNormalization(name=f'{prefix}-norm2'),
                 layers.LeakyReLU(0.1),
                 layers.AveragePooling2D(),
             ], prefix)(output)
@@ -43,9 +46,11 @@ def encode(args, img, out_dim):
         output = keras.Sequential([
             tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 3, padding='same'),
                                              name=f'{prefix}-conv1'),
+            layers.BatchNormalization(name=f'{prefix}-norm1'),
             layers.LeakyReLU(0.1),
             tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 4, padding='valid'),
                                              name=f'{prefix}-conv2'),
+            layers.BatchNormalization(name=f'{prefix}-norm2'),
             layers.LeakyReLU(0.1),
             layers.Flatten(),
             tfa.layers.SpectralNormalization(layers.Dense(out_dim), name=f'{prefix}-dense')
