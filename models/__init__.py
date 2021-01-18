@@ -66,11 +66,11 @@ def make_model(args, img_c, summarize=True):
         if args.load:
             print('loaded weights')
             if args.tpu:
-                model.gen.load_weights(os.path.join(args.out, 'gen.h5'), by_name=True)
-                model.disc.load_weights(os.path.join(args.out, 'disc.h5'), by_name=True)
-            else:
                 model.gen.load_weights(os.path.join(args.out, 'gen'))
                 model.disc.load_weights(os.path.join(args.out, 'disc'))
+            else:
+                model.gen.load_weights(os.path.join(args.out, 'gen.h5'), by_name=True)
+                model.disc.load_weights(os.path.join(args.out, 'disc.h5'), by_name=True)
         else:
             print('starting with new weights')
     else:
