@@ -86,6 +86,7 @@ class FIDCallback(keras.callbacks.Callback):
         fid = self.fid_model.fid_score(self.ds_val, ds_gen)
         end = datetime.datetime.now()
         duration = end - now
+        tf.summary.scalar('FID', data=fid, step=epoch)
         print(f'{fid:.3} FID. {duration} wall time')
 
 def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
