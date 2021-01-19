@@ -29,6 +29,8 @@ class FID(keras.Model):
         return self.inception(x)
 
     def frechet_dist(self, act1, act2):
+        assert len(act1) > 0
+        assert len(act2) > 0
         tf.debugging.assert_rank(act1, 2)
         tf.debugging.assert_rank(act2, 2)
 
