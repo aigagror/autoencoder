@@ -25,10 +25,25 @@ class TestFID(unittest.TestCase):
             self.assertAlmostEqual(self.fid_model.fid_score(a, a), 0, delta=1e-3)
             self.assertGreater(self.fid_model.fid_score(a, b), 10)
 
-    def test_speed(self):
-        self.skipTest('Speed test takes too long')
+    def test_cifar10(self):
+        self.skipTest('test takes too long')
         bsz = 128
         (train_imgs, _), (val_imgs, _) = tf.keras.datasets.cifar10.load_data()
+        train_imgs = tf.data.Dataset.from_tensor_slices(train_imgs).batch(bsz).prefetch(tf.data.AUTOTUNE)
+        val_imgs = tf.data.Dataset.from_tensor_slices(val_imgs).batch(bsz).prefetch(tf.data.AUTOTUNE)
+        start = datetime.datetime.now()
+        fid = self.fid_model.fid_score(train_imgs, val_imgs)
+        end = datetime.datetime.now()
+        duration = end - start
+        print(f'FID: {fid:.3}. Wall time: {duration}. BSZ: {bsz}')
+
+    def test_mnist(self):
+        self.skipTest('test takes too long')
+        bsz = 128
+        (train_imgs, _), (val_imgs, _) = tf.keras.datasets.mnist.load_data()
+        train_imgs = np.expand_dims(train_imgs, -1)
+        val_imgs = np.expand_dims(val_imgs, -1)
+
         train_imgs = tf.data.Dataset.from_tensor_slices(train_imgs).batch(bsz).prefetch(tf.data.AUTOTUNE)
         val_imgs = tf.data.Dataset.from_tensor_slices(val_imgs).batch(bsz).prefetch(tf.data.AUTOTUNE)
         start = datetime.datetime.now()
