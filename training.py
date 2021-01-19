@@ -112,7 +112,7 @@ def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
             print('WARNING: Cannot save h5 files in GCS')
 
         # FID
-        callbacks.append(FIDCallback(args, fid_model, ds_val))
+        callbacks.append(FIDCallback(args, fid_model, ds_train, ds_val))
 
     # Train
     if args.steps_epoch is not None:
