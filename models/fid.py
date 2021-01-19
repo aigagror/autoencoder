@@ -35,7 +35,9 @@ class FID(keras.Model):
         ssdiff = np.sum((mu1 - mu2) ** 2)
 
         # calculate sqrt of product between cov
-        covmean = sqrtm(sigma1.dot(sigma2))
+        covmean = sigma1.dot(sigma2)
+        assert np.isfinite(covmean).all(), covmean
+        covmean = sqrtm(covmean)
 
         # check and correct imaginary numbers from sqrt
         if iscomplexobj(covmean):
