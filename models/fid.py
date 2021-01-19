@@ -55,14 +55,20 @@ class FID(keras.Model):
     def fid_score(self, ds1, ds2):
         all_feats1, all_feats2 = np.zeros([0, 2048]), np.zeros([0, 2048])
 
+        # Distribute
+        ds1 = self.distribute_strategy.experimental_distribute_dataset(ds1)
+        ds2 = self.distribute_strategy.experimental_distribute_dataset(ds2)
+
         # First dataset
         for imgs in ds1:
-            feats1 = self.feats(imgs)
+            feats1 = self.distribute_strategy.run(self.feats, [imgs])
+            feats1 = self.distribute_strategy.gather(feats1, axis=0)
             all_feats1 = np.append(all_feats1, feats1, axis=0)
 
         # Second dataset
         for imgs in ds2:
-            feats2 = self.feats(imgs)
+            feats2 = self.distribute_strategy.run(self.feats, [imgs])
+            feats2 = self.distribute_strategy.gather(feats2, axis=0)
             all_feats2 = np.append(all_feats2, feats2, axis=0)
 
         return self.frechet_dist(all_feats1, all_feats2)

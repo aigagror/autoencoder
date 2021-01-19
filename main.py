@@ -1,5 +1,5 @@
 from data import load_datasets
-from models import make_model
+from models import make_model, fid
 from training import train
 from utils import parser, setup
 
@@ -23,6 +23,7 @@ def run(args):
     # Models
     with strategy.scope():
         model = make_model(args, info['channels'])
+        fid_model = fid.FID()
 
     # Train
     train(args, model, ds_train, ds_val, info)
