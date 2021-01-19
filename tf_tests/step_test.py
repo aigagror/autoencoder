@@ -17,8 +17,8 @@ class StepTests(unittest.TestCase):
         utils.setup(self.args)
 
     def test_gan_steps(self):
-        ds_train, ds_val, img_c = data.load_datasets(self.args)
-        gan = models.make_model(self.args, img_c, summarize=False)
+        ds_train, ds_val, ds_info = data.load_datasets(self.args)
+        gan = models.make_model(self.args, ds_info['channels'], summarize=False)
 
         img = next(iter(ds_train))
         disc_vals = gan.disc_step(img)

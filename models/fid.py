@@ -24,7 +24,8 @@ class FID(keras.Model):
         imgs = tf.image.resize(imgs, [299, 299])
 
         # Feed through inceptionv3
-        x = self.preprocess(imgs)
+        x = (imgs + 1) * 127.5
+        x = self.preprocess(x)
         return self.inception(x)
 
     def frechet_dist(self, act1, act2):
