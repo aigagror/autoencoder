@@ -29,6 +29,8 @@ class FID(keras.Model):
         return self.inception(x)
 
     def frechet_dist(self, act1, act2):
+        assert isinstance(act1, np.ndarray)
+        assert isinstance(act2, np.ndarray)
         assert len(act1) > 0
         assert len(act2) > 0
         tf.debugging.assert_rank(act1, 2)
@@ -79,14 +81,14 @@ class FID(keras.Model):
         # First dataset
         for imgs in ds1:
             feats1 = self.distribute_strategy.run(self.feats, [imgs])
-            feats1 = self.distribute_strategy.gather(feats1, axis=0)
+            feats1 = self.distribute_strategy.gather(feats1, axis=0).numpy()
             tf.debugging.assert_all_finite(feats1, f'feats not finite\n{feats1}')
             all_feats1 = np.append(all_feats1, feats1, axis=0)
 
         # Second dataset
         for imgs in ds2:
             feats2 = self.distribute_strategy.run(self.feats, [imgs])
-            feats2 = self.distribute_strategy.gather(feats2, axis=0)
+            feats2 = self.distribute_strategy.gather(feats2, axis=0).numpy()
             tf.debugging.assert_all_finite(feats2, f'feats not finite\n{feats2}')
             all_feats2 = np.append(all_feats2, feats2, axis=0)
 
