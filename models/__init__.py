@@ -10,7 +10,7 @@ from models.style_content import SC_VGG19
 from models.synthesis import FirstStyleSynthBlock, HiddenStyleSynthBlock, synthesize
 
 
-def make_model(args, img_c, summarize=True):
+def make_model(args, img_c, summarize):
     if args.model == 'autoencoder':
         # Autoencoder
         img = keras.Input((args.imsize, args.imsize, img_c), name='img-in')

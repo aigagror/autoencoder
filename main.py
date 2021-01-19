@@ -13,7 +13,7 @@ def run(args):
 
     # Models
     with strategy.scope():
-        model = make_model(args, ds_info['channels'])
+        model = make_model(args, ds_info['channels'], summarize=args.debug)
         if args.model == 'gan':
             fid_model = fid.FID()
         else:
