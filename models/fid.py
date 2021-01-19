@@ -8,11 +8,13 @@ from tensorflow import keras
 
 
 class FID(keras.Model):
-    def __init__(self):
+    def __init__(self, summarize=False):
         super().__init__()
 
         self.preprocess = keras.applications.inception_v3.preprocess_input
         self.inception = keras.applications.InceptionV3(include_top=False, pooling='avg')
+        if summarize:
+            self.inception.summary()
 
     @tf.function
     def feats(self, imgs):
