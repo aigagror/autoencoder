@@ -72,6 +72,9 @@ class FIDCallback(keras.callbacks.Callback):
         self.ds_train = ds_train
         self.ds_val = ds_val
 
+        self.file_writer = tf.summary.create_file_writer(os.path.join(args.out, "metrics"))
+        self.file_writer.set_as_default()
+
     def on_train_begin(self, logs=None):
         now = datetime.datetime.now()
         # Take at most 10000 items from train dataset to save time
@@ -82,8 +85,8 @@ class FIDCallback(keras.callbacks.Callback):
         print(f'{fid:.3} FID between train and val. {duration} wall time')
 
     def on_epoch_end(self, epoch, logs=None):
-        ds_gen = self.model.gen_ds(self.ds_val)
         now = datetime.datetime.now()
+        ds_gen = self.model.gen_ds(self.ds_val)
         fid = self.fid_model.fid_score(self.ds_val, ds_gen)
         end = datetime.datetime.now()
         duration = end - now

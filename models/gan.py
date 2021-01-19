@@ -16,14 +16,21 @@ class GAN(keras.Model):
     def call(self, imgs):
         return self.gen(imgs)
 
+    @tf.function
+    def tf_gen(self, imgs):
+        return self.gen(imgs)
+
     def gen_ds(self, ds):
         """
         Generates fake dataset the same size as the given dataset
         """
-        gen_imgs = []
+        ds = self.distribute_strategy.experimental_distribute_dataset(ds)
+        all_gen_imgs = []
         for imgs in ds:
-            gen_imgs.append(self.gen(imgs))
-        ds_gen = tf.concat(gen_imgs, axis=0)
+            gen_imgs = self.distribute_strategy.run(self.tf_gen, [imgs])
+            gen_imgs = self.distribute_strategy.gather(gen_imgs, axis=0)
+            all_gen_imgs.append(gen_imgs)
+        ds_gen = tf.concat(all_gen_imgs, axis=0)
         tf.debugging.assert_greater_equal(ds_gen, -1.0)
         tf.debugging.assert_less_equal(ds_gen, 1.0)
         ds_gen = tf.data.Dataset.from_tensor_slices(ds_gen).batch(self.bsz).prefetch(tf.data.AUTOTUNE)
