@@ -37,7 +37,7 @@ class FID(keras.Model):
 
         # calculate sqrt of product between cov
         covmean = sigma1.dot(sigma2)
-        assert np.isfinite(covmean).all(), covmean
+        assert np.isfinite(covmean).all(), (covmean, act1, act2)
         covmean = sqrtm(covmean)
 
         # check and correct imaginary numbers from sqrt
