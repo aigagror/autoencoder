@@ -9,12 +9,13 @@ from tqdm.auto import tqdm
 
 
 class FID(keras.Model):
-    def __init__(self, summarize=False):
+    def __init__(self, debug=False):
         super().__init__()
+        self.debug = debug
 
         self.preprocess = keras.applications.inception_v3.preprocess_input
         self.inception = keras.applications.InceptionV3(include_top=False, pooling='avg')
-        if summarize:
+        if debug:
             self.inception.summary()
 
     @tf.function
@@ -79,6 +80,8 @@ class FID(keras.Model):
         ds1, ds2 = ds1.map(to_rgb, tf.data.AUTOTUNE), ds2.map(to_rgb, tf.data.AUTOTUNE)
 
         # Distribute
+        if self.debug:
+            print('strategy', self.distribute_strategy)
         ds1 = self.distribute_strategy.experimental_distribute_dataset(ds1)
         ds2 = self.distribute_strategy.experimental_distribute_dataset(ds2)
 
