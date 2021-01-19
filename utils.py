@@ -32,6 +32,7 @@ parser.add_argument('--bsz', type=int)
 
 parser.add_argument('--steps-exec', type=int, help='steps per execution')
 parser.add_argument('--steps-epoch', type=int, help='steps per epoch')
+parser.add_argument('--update-freq', type=str, default='epoch', help='tensorboard update frequency')
 
 # Save
 parser.add_argument('--out', type=str, default='./out')
