@@ -72,7 +72,7 @@ class FIDCallback(keras.callbacks.Callback):
         self.ds = ds
 
     def on_epoch_end(self, epoch, logs=None):
-        ds_gen = self.model.gen_ds(10000)
+        ds_gen = self.model.gen_ds(self.ds)
         now = datetime.datetime.now()
         fid = self.fid_model.fid_score(self.ds, ds_gen)
         end = datetime.datetime.now()
