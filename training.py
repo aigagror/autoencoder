@@ -64,7 +64,7 @@ class ProgressiveGANCheckpoint(keras.callbacks.Callback):
             self.model.disc.save_weights(os.path.join(self.args.out, 'disc.h5'))
 
 
-def train(args, model, ds_train, ds_val):
+def train(args, model, ds_train, ds_val, info):
     # Reset data?
     if not args.load:
         if args.out.startswith('gs://'):
@@ -88,8 +88,13 @@ def train(args, model, ds_train, ds_val):
             print('WARNING: Cannot save h5 files in GCS')
 
     # Train
+    if args.steps_epoch is not None:
+        steps_per_epoch = args.steps_epoch
+    else:
+        steps_per_epoch = info['train-size'] // args.bsz
+        print(f'steps-per-epoch not specified. setting it to train-size // bsz = {steps_per_epoch}')
     try:
-        model.fit(ds_train, batch_size=args.bsz, epochs=args.epochs, steps_per_epoch=args.steps_epoch,
+        model.fit(ds_train, batch_size=args.bsz, epochs=args.epochs, steps_per_epoch=steps_per_epoch,
                   callbacks=callbacks)
     except KeyboardInterrupt:
         print('caught keyboard interrupt. ended training.')

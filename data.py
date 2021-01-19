@@ -7,6 +7,7 @@ def load_datasets(args):
         # CelebA HQ
         img_c = 3
         rand_flip = True
+        train_size, val_size = 28000, 2000
         if args.tpu:
             # GCS
             train_files = tf.data.Dataset.list_files('gs://aigagror/datasets/celeba_hq/train-*')
@@ -29,6 +30,7 @@ def load_datasets(args):
         # MNIST
         img_c = 1
         rand_flip = False
+        train_size, val_size = 50000, 10000
 
         def get_img(input):
             return input['image']
@@ -75,4 +77,10 @@ def load_datasets(args):
         ds_train = ds_train.repeat()
         print('steps per epoch set. repeating training dataset')
 
-    return ds_train, ds_val, img_c
+    info = {
+        'channels': img_c,
+        'train-size': train_size,
+        'val-size': val_size
+    }
+
+    return ds_train, ds_val, info

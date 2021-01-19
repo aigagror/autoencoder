@@ -9,14 +9,14 @@ def run(args):
     strategy = setup(args)
 
     # Data
-    ds_train, ds_val, img_c = load_datasets(args)
+    ds_train, ds_val, info = load_datasets(args)
 
     # Models
     with strategy.scope():
-        model = make_model(args, img_c)
+        model = make_model(args, info['channels'])
 
     # Train
-    train(args, model, ds_train, ds_val)
+    train(args, model, ds_train, ds_val, info)
 
 
 if __name__ == '__main__':
