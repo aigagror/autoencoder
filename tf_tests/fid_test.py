@@ -26,14 +26,15 @@ class TestFID(unittest.TestCase):
             self.assertGreater(self.fid_model.fid_score(a, b), 10)
 
     def test_speed(self):
+        bsz = 1024
         (train_imgs, _), (val_imgs, _) = tf.keras.datasets.cifar10.load_data()
-        train_imgs = tf.data.Dataset.from_tensor_slices(train_imgs).batch(512).prefetch(tf.data.AUTOTUNE)
-        val_imgs = tf.data.Dataset.from_tensor_slices(val_imgs).batch(512).prefetch(tf.data.AUTOTUNE)
+        train_imgs = tf.data.Dataset.from_tensor_slices(train_imgs).batch(bsz).prefetch(tf.data.AUTOTUNE)
+        val_imgs = tf.data.Dataset.from_tensor_slices(val_imgs).batch(bsz).prefetch(tf.data.AUTOTUNE)
         start = datetime.datetime.now()
         fid = self.fid_model.fid_score(train_imgs, val_imgs)
         end = datetime.datetime.now()
         duration = end - start
-        print(f'FID: {fid:.3}. Wall time: {duration}')
+        print(f'FID: {fid:.3}. Wall time: {duration}. BSZ: {bsz}')
 
 
 if __name__ == '__main__':
