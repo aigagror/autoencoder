@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import keras, nn
 
 from models import r1_penalty
-
+from tqdm.auto import tqdm
 
 class GAN(keras.Model):
     def __init__(self, args, gen, disc):
@@ -26,7 +26,7 @@ class GAN(keras.Model):
         """
         ds = self.distribute_strategy.experimental_distribute_dataset(ds)
         all_gen_imgs = []
-        for imgs in ds:
+        for imgs in tqdm(ds, 'gen_ds'):
             gen_imgs = self.distribute_strategy.run(self.tf_gen, [imgs])
             gen_imgs = self.distribute_strategy.gather(gen_imgs, axis=0)
             all_gen_imgs.append(gen_imgs)
