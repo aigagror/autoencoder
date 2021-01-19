@@ -75,6 +75,7 @@ class FIDCallback(keras.callbacks.Callback):
     def on_train_begin(self, logs=None):
         now = datetime.datetime.now()
         # Take at most 10000 items from train dataset to save time
+        print('calculating FID score between train and val', flush=True)
         fid = self.fid_model.fid_score(self.ds_val, self.ds_train.take(10000 // self.args.bsz))
         end = datetime.datetime.now()
         duration = end - now
