@@ -4,6 +4,7 @@ import shutil
 import tensorflow as tf
 from matplotlib import pyplot as plt
 from tensorflow import keras
+import datetime
 
 
 def plot_sample_images(model, ds):
@@ -63,8 +64,22 @@ class ProgressiveGANCheckpoint(keras.callbacks.Callback):
             self.model.gen.save_weights(os.path.join(self.args.out, 'gen.h5'))
             self.model.disc.save_weights(os.path.join(self.args.out, 'disc.h5'))
 
+class FIDCallback(keras.callbacks.Callback):
+    def __init__(self, args, fid_model, ds):
+        super().__init__()
+        self.args = args
+        self.fid_model = fid_model
+        self.ds = ds
 
-def train(args, model, ds_train, ds_val, info):
+    def on_epoch_end(self, epoch, logs=None):
+        ds_gen = self.model.gen_ds(10000)
+        now = datetime.datetime.now()
+        fid = self.fid_model.fid_score(self.ds, ds_gen)
+        end = datetime.datetime.now()
+        duration = end - now
+        print(f'{fid:.3} FID. {duration} wall time')
+
+def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
     # Reset data?
     if not args.load:
         if args.out.startswith('gs://'):
@@ -87,11 +102,14 @@ def train(args, model, ds_train, ds_val, info):
         if args.tpu:
             print('WARNING: Cannot save h5 files in GCS')
 
+        # FID
+        callbacks.append(FIDCallback(args, fid_model, ds_val))
+
     # Train
     if args.steps_epoch is not None:
         steps_per_epoch = args.steps_epoch
     else:
-        steps_per_epoch = info['train-size'] // args.bsz
+        steps_per_epoch = ds_info['train-size'] // args.bsz
         print(f'steps-per-epoch not specified. setting it to train-size // bsz = {steps_per_epoch}')
     try:
         model.fit(ds_train, batch_size=args.bsz, epochs=args.epochs, steps_per_epoch=steps_per_epoch,

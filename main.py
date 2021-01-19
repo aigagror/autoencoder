@@ -18,15 +18,18 @@ def run(args):
         return
 
     # Data
-    ds_train, ds_val, info = load_datasets(args)
+    ds_train, ds_val, ds_info = load_datasets(args)
 
     # Models
     with strategy.scope():
-        model = make_model(args, info['channels'])
-        fid_model = fid.FID()
+        model = make_model(args, ds_info['channels'])
+        if args.model == 'gan':
+            fid_model = fid.FID()
+        else:
+            fid_model = None
 
     # Train
-    train(args, model, ds_train, ds_val, info)
+    train(args, model, ds_train, ds_val, ds_info, fid_model)
 
 
 if __name__ == '__main__':
