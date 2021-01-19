@@ -63,12 +63,14 @@ class FID(keras.Model):
         for imgs in ds1:
             feats1 = self.distribute_strategy.run(self.feats, [imgs])
             feats1 = self.distribute_strategy.gather(feats1, axis=0)
+            tf.debugging.assert_all_finite(feats1)
             all_feats1 = np.append(all_feats1, feats1, axis=0)
 
         # Second dataset
         for imgs in ds2:
             feats2 = self.distribute_strategy.run(self.feats, [imgs])
             feats2 = self.distribute_strategy.gather(feats2, axis=0)
+            tf.debugging.assert_all_finite(feats2)
             all_feats2 = np.append(all_feats2, feats2, axis=0)
 
         return self.frechet_dist(all_feats1, all_feats2)
