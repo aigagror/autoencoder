@@ -5,6 +5,7 @@ from numpy import iscomplexobj
 from numpy import trace
 from scipy.linalg import sqrtm
 from tensorflow import keras
+from tqdm.auto import tqdm
 
 
 class FID(keras.Model):
@@ -82,14 +83,14 @@ class FID(keras.Model):
         ds2 = self.distribute_strategy.experimental_distribute_dataset(ds2)
 
         # First dataset
-        for imgs in ds1:
+        for imgs in tqdm(ds1, 'feats1', leave=False):
             feats1 = self.distribute_strategy.run(self.feats, [imgs])
             feats1 = self.distribute_strategy.gather(feats1, axis=0).numpy()
             tf.debugging.assert_all_finite(feats1, f'feats not finite\n{feats1}')
             all_feats1 = np.append(all_feats1, feats1, axis=0)
 
         # Second dataset
-        for imgs in ds2:
+        for imgs in tqdm(ds2, 'feats2', leave=False):
             feats2 = self.distribute_strategy.run(self.feats, [imgs])
             feats2 = self.distribute_strategy.gather(feats2, axis=0).numpy()
             tf.debugging.assert_all_finite(feats2, f'feats not finite\n{feats2}')
