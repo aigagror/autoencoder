@@ -40,8 +40,8 @@ class FID(keras.Model):
         mu1, sigma1 = act1.mean(axis=0), cov(act1, rowvar=False)
         mu2, sigma2 = act2.mean(axis=0), cov(act2, rowvar=False)
 
-        tf.debugging.assert_all_finite(mu1, f'mu1 not finite\n{mu1}')
-        tf.debugging.assert_all_finite(mu2, f'mu2 not finite\n{mu2}')
+        tf.debugging.assert_all_finite(mu1, f'mu1 not finite\n{mu1}\n{act1}')
+        tf.debugging.assert_all_finite(mu2, f'mu2 not finite\n{mu2}\n{act2}')
 
         tf.debugging.assert_all_finite(sigma1, f'sigma1 not finite\n{sigma1}')
         tf.debugging.assert_all_finite(sigma2, f'sigma2 not finite\n{sigma2}')
