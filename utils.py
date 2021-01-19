@@ -48,7 +48,7 @@ parser.add_argument('--debug', action='store_true')
 
 def setup(args):
     # Logging
-    tf.get_logger().setLevel('WARNING')
+    tf.get_logger().setLevel('DEBUG' if args.debug else 'WARNING')
 
     # Policy
     mixed_precision.set_global_policy(args.policy)
