@@ -24,6 +24,8 @@ class GAN(keras.Model):
         for imgs in ds:
             gen_imgs.append(self.gen(imgs))
         ds_gen = tf.concat(gen_imgs, axis=0)
+        tf.debugging.assert_greater_equal(ds_gen, -1.0)
+        tf.debugging.assert_less_equal(ds_gen, 1.0)
         ds_gen = tf.data.Dataset.from_tensor_slices(ds_gen).batch(self.bsz).prefetch(tf.data.AUTOTUNE)
         return ds_gen
 
