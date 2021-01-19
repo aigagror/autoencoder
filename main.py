@@ -8,6 +8,14 @@ def run(args):
     # Setup
     strategy = setup(args)
 
+    if args.debug:
+        from tf_tests import fid_test
+        print('testing FID speed')
+
+        test_fid = fid_test.TestFID()
+        test_fid.setUp()
+        test_fid.test_speed()
+
     # Data
     ds_train, ds_val, info = load_datasets(args)
 

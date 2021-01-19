@@ -16,8 +16,11 @@ class FID(keras.Model):
 
     @tf.function
     def feats(self, imgs):
+        tf.debugging.assert_rank(imgs, 4)
+        imshape = tf.shape(imgs)
+        bsz, channels = imshape[0], imshape[-1]
+
         # Make RGB
-        bsz, channels = tf.shape(imgs)[[0, -1]]
         if channels == 1:
             imgs = tf.repeat(imgs, 3, axis=-1)
 

@@ -27,6 +27,8 @@ class TestFID(unittest.TestCase):
 
     def test_speed(self):
         (train_imgs, _), (val_imgs, _) = tf.keras.datasets.cifar10.load_data()
+        train_imgs = tf.data.Dataset.from_tensor_slices(train_imgs).batch(128).prefetch(tf.data.AUTOTUNE)
+        val_imgs = tf.data.Dataset.from_tensor_slices(val_imgs).batch(128).prefetch(tf.data.AUTOTUNE)
         start = datetime.datetime.now()
         fid = self.fid_model.fid_score(train_imgs, val_imgs)
         end = datetime.datetime.now()
