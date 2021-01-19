@@ -65,16 +65,25 @@ class ProgressiveGANCheckpoint(keras.callbacks.Callback):
             self.model.disc.save_weights(os.path.join(self.args.out, 'disc.h5'))
 
 class FIDCallback(keras.callbacks.Callback):
-    def __init__(self, args, fid_model, ds):
+    def __init__(self, args, fid_model, ds_train, ds_val):
         super().__init__()
         self.args = args
         self.fid_model = fid_model
-        self.ds = ds
+        self.ds_train = ds_train
+        self.ds_val = ds_val
+
+    def on_train_begin(self, logs=None):
+        now = datetime.datetime.now()
+        # Take at most 10000 items from train dataset to save time
+        fid = self.fid_model.fid_score(self.ds_val, self.ds_train.take(10000 // self.args.bsz))
+        end = datetime.datetime.now()
+        duration = end - now
+        print(f'{fid:.3} FID between train and val. {duration} wall time')
 
     def on_epoch_end(self, epoch, logs=None):
-        ds_gen = self.model.gen_ds(self.ds)
+        ds_gen = self.model.gen_ds(self.ds_val)
         now = datetime.datetime.now()
-        fid = self.fid_model.fid_score(self.ds, ds_gen)
+        fid = self.fid_model.fid_score(self.ds_val, ds_gen)
         end = datetime.datetime.now()
         duration = end - now
         print(f'{fid:.3} FID. {duration} wall time')
