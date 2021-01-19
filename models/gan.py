@@ -1,8 +1,9 @@
 import tensorflow as tf
 from tensorflow import keras, nn
+from tqdm.auto import tqdm
 
 from models import r1_penalty
-from tqdm.auto import tqdm
+
 
 class GAN(keras.Model):
     def __init__(self, args, gen, disc):
