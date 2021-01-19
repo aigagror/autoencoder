@@ -29,7 +29,6 @@ class GAN(keras.Model):
         ds_gen = tf.data.Dataset.from_tensor_slices(ds_gen).batch(self.bsz).prefetch(tf.data.AUTOTUNE)
         return ds_gen
 
-
     def compile(self, d_opt, g_opt, **kwargs):
         super().compile(**kwargs)
 
