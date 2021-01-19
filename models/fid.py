@@ -14,9 +14,21 @@ class FID(keras.Model):
         self.preprocess = keras.applications.inception_v3.preprocess_input
         self.inception = keras.applications.InceptionV3(include_top=False, pooling='avg')
 
+    @tf.function
     def feats(self, imgs):
-        x = tf.image.resize(imgs, [299, 299])
-        x = self.preprocess(x)
+        # Make RGB
+        bsz, channels = tf.shape(imgs)[[0, -1]]
+        if channels == 1:
+            imgs = tf.repeat(imgs, 3, axis=-1)
+
+        # Resize to inception size
+        imgs = tf.image.resize(imgs, [299, 299])
+
+        # Explicitly set channels
+        imgs = tf.reshape(imgs, [bsz, 299, 299, 3])
+
+        # Feed through inceptionv3
+        x = self.preprocess(imgs)
         return self.inception(x)
 
     def frechet_dist(self, act1, act2):

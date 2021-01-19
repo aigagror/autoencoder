@@ -1,7 +1,10 @@
+import datetime
 import unittest
-from models import fid
+
 import numpy as np
 import tensorflow as tf
+
+from models import fid
 
 
 class TestFID(unittest.TestCase):
@@ -22,6 +25,13 @@ class TestFID(unittest.TestCase):
             self.assertAlmostEqual(self.fid_model.fid_score(a, a), 0, delta=1e-3)
             self.assertGreater(self.fid_model.fid_score(a, b), 10)
 
+    def test_speed(self):
+        (train_imgs, _), (val_imgs, _) = tf.keras.datasets.cifar10.load_data()
+        start = datetime.datetime.now()
+        fid = self.fid_model.fid_score(train_imgs, val_imgs)
+        end = datetime.datetime.now()
+        duration = end - start
+        print(f'FID: {fid}. Wall time: {duration}')
 
 
 if __name__ == '__main__':
