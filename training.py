@@ -72,9 +72,6 @@ class FIDCallback(keras.callbacks.Callback):
         self.ds_train = ds_train
         self.ds_val = ds_val
 
-        self.file_writer = tf.summary.create_file_writer(os.path.join(args.out, "metrics"))
-        self.file_writer.set_as_default()
-
     def on_train_begin(self, logs=None):
         now = datetime.datetime.now()
         # Take at most 10000 items from train dataset to save time
@@ -90,7 +87,7 @@ class FIDCallback(keras.callbacks.Callback):
         fid = self.fid_model.fid_score(self.ds_val, ds_gen)
         end = datetime.datetime.now()
         duration = end - now
-        tf.summary.scalar('FID', data=fid, step=epoch)
+        self.model.update_fid(fid)
         print(f'{fid:.3} FID. {duration} wall time')
 
 def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
@@ -105,7 +102,6 @@ def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
     # Callbacks
     log_dir = os.path.join(args.out, 'logs')
     callbacks = [
-        keras.callbacks.TensorBoard(log_dir, histogram_freq=1, update_freq=args.update_freq),
         PlotImagesCallback(args, ds_val),
     ]
     if args.model == 'autoencoder':
@@ -118,6 +114,9 @@ def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
 
         # FID
         callbacks.append(FIDCallback(args, fid_model, ds_train, ds_val))
+
+    # Tensorboard
+    callbacks.append(keras.callbacks.TensorBoard(log_dir, histogram_freq=1, update_freq=args.update_freq))
 
     # Train
     if args.steps_epoch is not None:

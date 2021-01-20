@@ -56,7 +56,12 @@ class GAN(keras.Model):
 
             'd_grad_norm': keras.metrics.Mean('d_grad_norm'),
             'g_grad_norm': keras.metrics.Mean('g_grad_norm'),
+
+            'fid': keras.metrics.Mean('fid')
         }
+
+    def update_fid(self, fid):
+        self.metrics_dict['fid'].update_state(fid)
 
     @property
     def metrics(self):
