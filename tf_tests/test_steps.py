@@ -24,9 +24,9 @@ class StepTests(unittest.TestCase):
         disc_vals = gan.disc_step(img)
         gen_vals = gan.gen_step(img)
 
-        self.assertIsInstance(disc_vals, tuple)
-        self.assertIsInstance(gen_vals, tuple)
-        for v in disc_vals + gen_vals:
+        self.assertIsInstance(disc_vals, dict)
+        self.assertIsInstance(gen_vals, dict)
+        for k, v in list(disc_vals.items()) + list(gen_vals.items()):
             tf.debugging.assert_shapes([
                 (v, [])
             ])

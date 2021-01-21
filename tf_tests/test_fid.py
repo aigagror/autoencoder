@@ -12,20 +12,23 @@ class TestFID(unittest.TestCase):
         self.fid_model = fid.FID()
 
     def test_frechet_dist(self):
-        a = np.random.random([10, 2048])
-        b = np.random.random([10, 2048])
+        a = np.random.random([10, 128])
+        b = np.random.random([10, 128])
+
+        # Assert near 0 distance for equal distributions
         self.assertAlmostEqual(self.fid_model.frechet_dist(a, a), 0, delta=1e-3)
-        self.assertGreater(self.fid_model.frechet_dist(a, b), 350)
+
+        # Assert non-trivial distance for two independent gaussians
+        self.assertGreater(self.fid_model.frechet_dist(a, b), 10)
 
     def test_fid_score(self):
-        for imsize in [32, 128, 299]:
-            a = tf.data.Dataset.from_tensor_slices(255 * tf.random.uniform([10, imsize, imsize, 3])).batch(1)
-            b = tf.data.Dataset.from_tensor_slices(255 * tf.random.uniform([10, imsize, imsize, 3])).batch(1)
+        a = tf.data.Dataset.from_tensor_slices(255 * tf.random.uniform([10, 32, 32, 3])).batch(1)
+        b = tf.data.Dataset.from_tensor_slices(255 * tf.random.uniform([10, 32, 32, 3])).batch(1)
 
-            self.assertAlmostEqual(self.fid_model.fid_score(a, a), 0, delta=1e-3)
-            self.assertGreater(self.fid_model.fid_score(a, b), 10)
+        self.assertAlmostEqual(self.fid_model.fid_score(a, a), 0, delta=1e-2)
+        self.assertGreater(self.fid_model.fid_score(a, b), 10)
 
-    def test_cifar10(self):
+    def test_cifar10_fid(self):
         self.skipTest('test takes too long')
         bsz = 128
         (train_imgs, _), (val_imgs, _) = tf.keras.datasets.cifar10.load_data()
@@ -37,7 +40,7 @@ class TestFID(unittest.TestCase):
         duration = end - start
         print(f'FID: {fid:.3}. Wall time: {duration}. BSZ: {bsz}')
 
-    def test_mnist(self):
+    def test_mnist_fid(self):
         self.skipTest('test takes too long')
         bsz = 128
         (train_imgs, _), (val_imgs, _) = tf.keras.datasets.mnist.load_data()
