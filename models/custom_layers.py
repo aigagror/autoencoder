@@ -52,6 +52,6 @@ class LatentMap(layers.Layer):
         self.dim = args.zdim
 
     def call(self, img):
-        bsz = len(img)
+        bsz = tf.shape(img)[0]
         z = tf.random.normal([bsz, self.dim])
         return z

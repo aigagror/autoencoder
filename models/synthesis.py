@@ -45,7 +45,7 @@ class ConstBlock(layers.Layer):
         self.seed = self.add_weight('seed', shape=[1, 4, 4, self.args.zdim], trainable=True)
 
     def call(self, z):
-        bsz = len(z)
+        bsz = tf.shape(z)[0]
         img = tf.repeat(self.seed, bsz, axis=0)
         return img
 
