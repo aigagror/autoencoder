@@ -51,18 +51,14 @@ class PlotImagesCallback(keras.callbacks.Callback):
         imgs, recons = plot_sample_images(self.model, self.ds_val)
 
 
-class ProgressiveGANCheckpoint(keras.callbacks.Callback):
+class GANCheckpoint(keras.callbacks.Callback):
     def __init__(self, args):
         super().__init__()
         self.args = args
 
     def on_epoch_end(self, epoch, logs=None):
-        if self.args.tpu:
-            self.model.gen.save_weights(os.path.join(self.args.out, 'gen'))
-            self.model.disc.save_weights(os.path.join(self.args.out, 'disc'))
-        else:
-            self.model.gen.save_weights(os.path.join(self.args.out, 'gen.h5'))
-            self.model.disc.save_weights(os.path.join(self.args.out, 'disc.h5'))
+        self.model.gen.save(os.path.join(self.args.out, 'gen'))
+        self.model.disc.save(os.path.join(self.args.out, 'disc'))
 
 class FIDCallback(keras.callbacks.Callback):
     def __init__(self, args, fid_model, ds_train, ds_val):
@@ -90,6 +86,26 @@ class FIDCallback(keras.callbacks.Callback):
         self.model.update_fid(fid)
         print(f'{fid:.3} FID. {duration} wall time')
 
+def get_callbacks(args, ds_train, ds_val, fid_model):
+    callbacks = [
+        PlotImagesCallback(args, ds_val),
+    ]
+    if args.model == 'autoencoder':
+        model_path = os.path.join(args.out, 'ae')
+        callbacks.append(keras.callbacks.ModelCheckpoint(model_path, save_weights_only=True))
+
+    elif args.model == 'gan':
+        # Custom model checkpoint
+        callbacks.append(GANCheckpoint(args))
+
+        # FID
+        callbacks.append(FIDCallback(args, fid_model, ds_train, ds_val))
+    # Tensorboard
+    callbacks.append(
+        keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), histogram_freq=1, update_freq=args.update_freq))
+    return callbacks
+
+
 def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
     # Reset data?
     if not args.load:
@@ -100,23 +116,7 @@ def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
             os.mkdir(args.out)
 
     # Callbacks
-    log_dir = os.path.join(args.out, 'logs')
-    callbacks = [
-        PlotImagesCallback(args, ds_val),
-    ]
-    if args.model == 'autoencoder':
-        model_path = os.path.join(args.out, 'model')
-        callbacks.append(keras.callbacks.ModelCheckpoint(model_path, save_weights_only=True))
-    elif args.model == 'gan':
-        callbacks.append(ProgressiveGANCheckpoint(args))
-        if args.tpu:
-            print('WARNING: Cannot save h5 files in GCS')
-
-        # FID
-        callbacks.append(FIDCallback(args, fid_model, ds_train, ds_val))
-
-    # Tensorboard
-    callbacks.append(keras.callbacks.TensorBoard(log_dir, histogram_freq=1, update_freq=args.update_freq))
+    callbacks = get_callbacks(args, ds_train, ds_val, fid_model)
 
     # Train
     if args.steps_epoch is not None:

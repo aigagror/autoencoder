@@ -14,6 +14,22 @@ class GAN(keras.Model):
         self.disc = disc
         self.bce = nn.sigmoid_cross_entropy_with_logits
 
+        # Metrics
+        self.metrics_dict = {
+            'bce': keras.metrics.Mean('bce'),
+            'r1': keras.metrics.Mean('r1'),
+
+            'real_acc': keras.metrics.Mean('real_acc'),
+            'gen_acc': keras.metrics.Mean('gen_acc'),
+            'real_prob': keras.metrics.Mean('real_prob'),
+            'gen_prob': keras.metrics.Mean('gen_prob'),
+
+            'd_grad_norm': keras.metrics.Mean('d_grad_norm'),
+            'g_grad_norm': keras.metrics.Mean('g_grad_norm'),
+
+            'fid': keras.metrics.Mean('fid')
+        }
+
     def call(self, imgs):
         return self.gen(imgs)
 
@@ -36,29 +52,6 @@ class GAN(keras.Model):
         tf.debugging.assert_less_equal(ds_gen, 1.0)
         ds_gen = tf.data.Dataset.from_tensor_slices(ds_gen).batch(self.bsz).prefetch(tf.data.AUTOTUNE)
         return ds_gen
-
-    def compile(self, d_opt, g_opt, **kwargs):
-        super().compile(**kwargs)
-
-        # Optimizers
-        self.d_opt = d_opt
-        self.g_opt = g_opt
-
-        # Metrics
-        self.metrics_dict = {
-            'bce': keras.metrics.Mean('bce'),
-            'r1': keras.metrics.Mean('r1'),
-
-            'real_acc': keras.metrics.Mean('real_acc'),
-            'gen_acc': keras.metrics.Mean('gen_acc'),
-            'real_prob': keras.metrics.Mean('real_prob'),
-            'gen_prob': keras.metrics.Mean('gen_prob'),
-
-            'd_grad_norm': keras.metrics.Mean('d_grad_norm'),
-            'g_grad_norm': keras.metrics.Mean('g_grad_norm'),
-
-            'fid': keras.metrics.Mean('fid')
-        }
 
     def update_fid(self, fid):
         self.metrics_dict['fid'].update_state(fid)
@@ -91,7 +84,7 @@ class GAN(keras.Model):
             loss = bce + self.r1_weight * r1
 
         grad = tape.gradient(loss, self.disc.trainable_weights)
-        self.d_opt.apply_gradients(zip(grad, self.disc.trainable_weights))
+        self.disc.optimizer.apply_gradients(zip(grad, self.disc.trainable_weights))
 
         # Discriminator probabilities and accuracies
         real_prob = tf.sigmoid(d_real_logits)
@@ -127,7 +120,7 @@ class GAN(keras.Model):
             loss = nn.compute_average_loss(loss, global_batch_size=self.bsz)
 
         grad = tape.gradient(loss, self.gen.trainable_weights)
-        self.g_opt.apply_gradients(zip(grad, self.gen.trainable_weights))
+        self.gen.optimizer.apply_gradients(zip(grad, self.gen.trainable_weights))
 
         # Measure average gradient norms
         num_replicas = self.distribute_strategy.num_replicas_in_sync
