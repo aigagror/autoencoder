@@ -110,8 +110,7 @@ def synthesize(args, z, img_c):
         # First block
         prefix = f'first-conv-synth-block'
         img = keras.Sequential([
-            layers.Conv2DTranspose(args.hdim, kernel_size=4, name=f'{prefix}-convt'),
-            layers.LeakyReLU(0.1)
+            layers.Conv2DTranspose(args.hdim, kernel_size=4, name=f'{prefix}-convt', activation='relu'),
         ], prefix)(z)
 
         # Hidden blocks
@@ -119,20 +118,17 @@ def synthesize(args, z, img_c):
         for i in range(len(hdims)):
             prefix = f'hidden-conv-synth-block{i}'
             img = keras.Sequential([
-                layers.UpSampling2D(interpolation='bilinear'),
-
-                layers.Conv2D(hdims[i], 3, padding='same', name=f'{prefix}-conv1'),
-                layers.LeakyReLU(0.1),
-
-                layers.Conv2D(hdims[i], 3, padding='same', name=f'{prefix}-conv2'),
-                layers.LeakyReLU(0.1),
+                tfa.layers.SpectralNormalization(layers.Conv2D(hdims[i], 4, 2, padding='same', use_bias=False)
+                                                 , name=f'{prefix}-conv'),
+                layers.BatchNormalization(name=f'{prefix}-norm'),
+                layers.ReLU(),
             ], prefix)(img)
 
             if img.shape[1] == args.imsize:
                 break
 
         # To image
-        img = layers.Conv2D(img_c, 1, activation='tanh', name=f'{hdims[i]}-to-img')(img)
+        img = layers.Conv2D(img_c, 3, padding='same', activation='tanh', name=f'{hdims[i]}-to-img')(img)
 
     elif args.synthesis == 'style':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
