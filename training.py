@@ -23,7 +23,7 @@ def plot_sample_images(model, ds):
         recons = tf.squeeze(recons, axis=-1)
 
     f, ax = plt.subplots(2, len(imgs))
-    f.set_size_inches(15, 8)
+    f.set_size_inches(10, 6)
     if len(imgs) == 1:
         ax[0].imshow(imgs[0], vmin=0, vmax=1)
         ax[1].imshow(recons[0], vmin=0, vmax=1)
