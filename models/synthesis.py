@@ -118,7 +118,7 @@ def synthesize(args, z, img_c):
         for i in range(len(hdims)):
             prefix = f'hidden-conv-synth-block{i}'
             img = keras.Sequential([
-                tfa.layers.SpectralNormalization(layers.Conv2D(hdims[i], 4, 2, padding='same', use_bias=False)
+                tfa.layers.SpectralNormalization(layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False)
                                                  , name=f'{prefix}-conv'),
                 layers.BatchNormalization(name=f'{prefix}-norm'),
                 layers.ReLU(),
