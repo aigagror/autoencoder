@@ -27,9 +27,8 @@ def make_model(args, img_c, summarize):
 
             print('Starting with new model')
 
-        # Summarize?
-        if summarize:
-            model.summary()
+        # Summarize
+        model.summary()
 
     elif args.model == 'gan':
         # Generator and discriminator
@@ -55,10 +54,9 @@ def make_model(args, img_c, summarize):
 
             print('Starting with new model')
 
-        # Summarize?
-        if summarize:
-            gen.summary()
-            disc.summary()
+        # Summarize
+        gen.summary()
+        disc.summary()
 
         # GAN
         model = GAN(args, gen, disc)
