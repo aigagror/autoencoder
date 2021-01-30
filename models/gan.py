@@ -71,7 +71,7 @@ class GAN(keras.Model):
         return real_loss + gen_loss
 
     def gen_hinge_loss(self, d_gen_logits):
-        return -tf.reduce_mean(d_gen_logits)
+        return -d_gen_logits
 
     def disc_step(self, img):
         gen = self.gen(img, training=False)
