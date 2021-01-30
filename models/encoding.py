@@ -43,7 +43,7 @@ def encode(args, img, out_dim):
 
         output = tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 4, padding='valid'),
                                                   name=f'{prefix}-conv2')(output)
-        output = layers.LeakyReLU(0.1)(output)(output)
+        output = layers.LeakyReLU(0.1)(output)
 
         output = layers.Flatten()(output)(output)
         output = tfa.layers.SpectralNormalization(layers.Dense(out_dim), name=f'{prefix}-dense')(output)
