@@ -23,7 +23,8 @@ def make_model(args, img_c, summarize):
             recon = SC_VGG19(args)((img, recon))
 
             model = keras.Model(img, recon, name='autoencoder')
-            model.compile(optimizer=keras.optimizers.Adam(args.ae_lr), steps_per_execution=args.steps_exec)
+            model.compile(optimizer=keras.optimizers.Adam(args.ae_lr, beta_1=0, beta_2=0.99),
+                          steps_per_execution=args.steps_exec)
 
             print('Starting with new model')
 
