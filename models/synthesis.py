@@ -118,7 +118,8 @@ def synthesize(args, z, img_c):
                 break
 
         # To image
-        img = layers.Conv2D(img_c, 3, padding='same', activation='tanh', name=f'{hdims[i]}_to_img')(img)
+        img = tfa.layers.SpectralNormalization(layers.Conv2D(img_c, 3, padding='same', activation='tanh'),
+                                               name=f'{hdims[i]}_to_img')(img)
 
     elif args.synthesis == 'style':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
