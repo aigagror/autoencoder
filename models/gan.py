@@ -26,9 +26,7 @@ class GAN(keras.Model):
             'gen_prob': keras.metrics.Mean('gen_prob'),
 
             'd_grad_norm': keras.metrics.Mean('d_grad_norm'),
-            'g_grad_norm': keras.metrics.Mean('g_grad_norm'),
-
-            'fid': keras.metrics.Mean('fid')
+            'g_grad_norm': keras.metrics.Mean('g_grad_norm')
         }
 
     def call(self, imgs):
