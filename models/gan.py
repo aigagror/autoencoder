@@ -16,7 +16,8 @@ class GAN(keras.Model):
 
         # Metrics
         self.metrics_dict = {
-            'bce': keras.metrics.Mean('bce'),
+            'disc_loss': keras.metrics.Mean('disc_loss'),
+            'gen_loss': keras.metrics.Mean('gen_loss'),
             'r1': keras.metrics.Mean('r1'),
 
             'real_acc': keras.metrics.Mean('real_acc'),
