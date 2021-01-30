@@ -65,6 +65,14 @@ class GAN(keras.Model):
         # `reset_states()` yourself at the time of your choosing.
         return self.metrics_dict.values()
 
+    def disc_hinge_loss(self, d_real_logits, d_gen_logits):
+        real_loss = tf.nn.relu(1. - d_real_logits)
+        gen_loss = tf.nn.relu(1. + d_gen_logits)
+        return real_loss + gen_loss
+
+    def gen_hinge_loss(self, d_gen_logits):
+        return -tf.reduce_mean(d_gen_logits)
+
     def disc_step(self, img):
         gen = self.gen(img, training=False)
         with tf.GradientTape() as tape:
@@ -72,14 +80,12 @@ class GAN(keras.Model):
             real_labels = tf.ones_like(d_real_logits)
             gen_labels = tf.zeros_like(d_gen_logits)
 
-            real_loss = self.bce(real_labels, d_real_logits)
-            gen_loss = self.bce(gen_labels, d_gen_logits)
-            bce = real_loss + gen_loss
-            bce = nn.compute_average_loss(bce, global_batch_size=self.bsz)
+            disc_loss = self.disc_hinge_loss(d_real_logits, d_gen_logits)
+            disc_loss = nn.compute_average_loss(disc_loss, global_batch_size=self.bsz)
 
             r1 = r1_penalty(self.disc, img)
             r1 = nn.compute_average_loss(r1, global_batch_size=self.bsz)
-            loss = bce + self.r1_weight * r1
+            loss = disc_loss + self.r1_weight * r1
 
         grad = tape.gradient(loss, self.disc.trainable_weights)
         self.disc.optimizer.apply_gradients(zip(grad, self.disc.trainable_weights))
@@ -102,7 +108,7 @@ class GAN(keras.Model):
 
         # Return metrics
         info = {
-            'bce': bce, 'r1': r1,
+            'disc_loss': disc_loss, 'r1': r1,
             'real_prob': real_prob, 'gen_prob': gen_prob,
             'real_acc': real_acc, 'gen_acc': gen_acc,
             'd_grad_norm': grad_norm
@@ -113,8 +119,8 @@ class GAN(keras.Model):
     def gen_step(self, img):
         with tf.GradientTape() as tape:
             gen = self.gen(img, training=True)
-            disc_gen_logits = self.disc(gen, training=False)
-            loss = self.bce(tf.ones_like(disc_gen_logits), disc_gen_logits)
+            d_gen_logits = self.disc(gen, training=False)
+            loss = self.gen_hinge_loss(d_gen_logits)
             loss = nn.compute_average_loss(loss, global_batch_size=self.bsz)
 
         grad = tape.gradient(loss, self.gen.trainable_weights)
@@ -125,7 +131,7 @@ class GAN(keras.Model):
         all_grad_norms = [tf.norm(g) for g in grad]
         grad_norm = tf.reduce_mean(all_grad_norms) / num_replicas
 
-        return {'g_grad_norm': grad_norm}
+        return {'gen_loss': loss, 'g_grad_norm': grad_norm}
 
     def train_step(self, img):
         d_metrics = self.disc_step(img)
