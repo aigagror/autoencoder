@@ -1,6 +1,5 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
-from tensorflow import keras
 from tensorflow.keras import layers
 
 
@@ -19,34 +18,20 @@ def encode(args, img, out_dim):
                  min(512, args.hdim), min(512, args.hdim), min(512, args.hdim), min(512, args.hdim)]
         i, in_h, out_h = None, None, None
         for i in range(len(hdims) - 1):
-            prefix = f'block{i+1}'
             in_h, out_h = hdims[i], hdims[i + 1]
-
-            out = tfa.layers.SpectralNormalization(layers.Conv2D(in_h, 3, padding='same'),
-                                                      name=f'{prefix}_conv1')(out)
+            out = tfa.layers.SpectralNormalization(
+                layers.Conv2D(in_h, 4, 2, padding='same'), name=f'block{i + 1}_conv')(out)
             out = layers.LeakyReLU(0.1)(out)
-
-            out = tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 3, padding='same'),
-                                                      name=f'{prefix}_conv2')(out)
-            out = layers.LeakyReLU(0.1)(out)
-
-            out = layers.AveragePooling2D()(out)
 
             if out.shape[1] == 4:
                 break
 
         # Last block
-        prefix = f'block{i+2}'
-        out = tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 3, padding='same'),
-                                                  name=f'{prefix}_conv1')(out)
-        out = layers.LeakyReLU(0.1)(out)
-
-        out = tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 4, padding='valid'),
-                                                  name=f'{prefix}_conv2')(out)
+        out = tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 4, padding='valid'), name=f'block{i + 2}_conv')(out)
         out = layers.LeakyReLU(0.1)(out)
 
         out = layers.Flatten()(out)
-        out = tfa.layers.SpectralNormalization(layers.Dense(out_dim), name=f'{prefix}_dense')(out)
+        out = tfa.layers.SpectralNormalization(layers.Dense(out_dim), name=f'block{i + 2}_dense')(out)
     else:
         raise Exception(f'unknown encoder network {args.encoder}')
 

@@ -109,10 +109,9 @@ def synthesize(args, z, img_c):
         # Hidden blocks
         i = None
         for i in range(len(hdims)):
-            prefix = f'block{i+1}'
             img = tfa.layers.SpectralNormalization(
-                layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'{prefix}_conv')(img)
-            img = layers.BatchNormalization(scale=False, name=f'{prefix}_norm')(img)
+                layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'block{i + 1}_conv')(img)
+            img = layers.BatchNormalization(scale=False, name=f'block{i + 1}_norm')(img)
             img = layers.ReLU()(img)
 
             if img.shape[1] == args.imsize:
@@ -132,7 +131,7 @@ def synthesize(args, z, img_c):
         # Hidden blocks
         i = None
         for i in range(len(hdims) - 1):
-            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'block{i+1}')((img, z))
+            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'block{i + 1}')((img, z))
 
             if img.shape[1] == args.imsize:
                 break
