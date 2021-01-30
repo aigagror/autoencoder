@@ -84,7 +84,6 @@ class FIDCallback(keras.callbacks.Callback):
         fid = self.fid_model.fid_score(self.ds_val, ds_gen)
         end = datetime.datetime.now()
         duration = end - now
-        self.model.update_fid(fid)
         print(f'{fid:.3} FID. {duration} wall time')
 
 def get_callbacks(args, ds_train, ds_val, fid_model):

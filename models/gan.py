@@ -52,9 +52,6 @@ class GAN(keras.Model):
         ds_gen = tf.data.Dataset.from_tensor_slices(ds_gen).batch(self.bsz).prefetch(tf.data.AUTOTUNE)
         return ds_gen
 
-    def update_fid(self, fid):
-        self.metrics_dict['fid'].update_state(fid)
-
     @property
     def metrics(self):
         # We list our `Metric` objects here so that `reset_states()` can be
@@ -119,10 +116,10 @@ class GAN(keras.Model):
         with tf.GradientTape() as tape:
             gen = self.gen(img, training=True)
             d_gen_logits = self.disc(gen, training=False)
-            loss = self.gen_hinge_loss(d_gen_logits)
-            loss = nn.compute_average_loss(loss, global_batch_size=self.bsz)
+            gen_loss = self.gen_hinge_loss(d_gen_logits)
+            gen_loss = nn.compute_average_loss(gen_loss, global_batch_size=self.bsz)
 
-        grad = tape.gradient(loss, self.gen.trainable_weights)
+        grad = tape.gradient(gen_loss, self.gen.trainable_weights)
         self.gen.optimizer.apply_gradients(zip(grad, self.gen.trainable_weights))
 
         # Measure average gradient norms
@@ -130,7 +127,7 @@ class GAN(keras.Model):
         all_grad_norms = [tf.norm(g) for g in grad]
         grad_norm = tf.reduce_mean(all_grad_norms) / num_replicas
 
-        return {'gen_loss': loss, 'g_grad_norm': grad_norm}
+        return {'gen_loss': gen_loss, 'g_grad_norm': grad_norm}
 
     def train_step(self, img):
         d_metrics = self.disc_step(img)
