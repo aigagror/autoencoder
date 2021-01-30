@@ -14,8 +14,8 @@ def encode(args, img, out_dim):
         out = layers.LeakyReLU(0.1)(out)
 
         # Hidden blocks
-        hdims = [min(16, args.hdim), min(32, args.hdim), min(64, args.hdim), min(128, args.hdim), min(256, args.hdim),
-                 min(512, args.hdim), min(512, args.hdim), min(512, args.hdim), min(512, args.hdim)]
+        hdims = [16, 32, 64, 128, 256, 512, 512, 512, 512]
+        hdims = [min(h, args.hdim) for h in hdims]
         i, in_h, out_h = None, None, None
         for i in range(len(hdims) - 1):
             in_h, out_h = hdims[i], hdims[i + 1]

@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow.keras import layers
@@ -93,9 +94,9 @@ class HiddenStyleSynthBlock(layers.Layer):
 
 
 def synthesize(args, z, img_c):
-    hdims = [min(512, args.hdim), min(512, args.hdim), min(512, args.hdim),
-             min(512, args.hdim), min(256, args.hdim), min(128, args.hdim),
-             min(64, args.hdim), min(32, args.hdim), min(16, args.hdim)]
+    hdims = [512, 512, 512, 512, 256, 128, 64, 32, 16]
+    hdims = [min(h, args.hdim) for h in hdims]
+
     if args.synthesis == 'affine':
         img = layers.Dense(args.imsize * args.imsize * img_c, activation='tanh', name='affine')(z)
         img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
@@ -108,14 +109,11 @@ def synthesize(args, z, img_c):
 
         # Hidden blocks
         i = None
-        for i in range(len(hdims)):
+        for i in range(10 - int(np.log2(args.imsize)), len(hdims)):
             img = tfa.layers.SpectralNormalization(
                 layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'block{i + 1}_conv')(img)
             img = layers.BatchNormalization(scale=False, name=f'block{i + 1}_norm')(img)
             img = layers.ReLU()(img)
-
-            if img.shape[1] == args.imsize:
-                break
 
         # To image
         img = tfa.layers.SpectralNormalization(layers.Conv2D(img_c, 3, padding='same', activation='tanh'),
@@ -131,11 +129,8 @@ def synthesize(args, z, img_c):
 
         # Hidden blocks
         i = None
-        for i in range(len(hdims) - 1):
+        for i in range(10 - int(np.log2(args.imsize)), len(hdims) - 1):
             img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'block{i + 1}')((img, z))
-
-            if img.shape[1] == args.imsize:
-                break
 
         # To image
         img = tfa.layers.SpectralNormalization(layers.Conv2D(img_c, 1, activation='tanh'),
