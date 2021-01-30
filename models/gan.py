@@ -115,7 +115,7 @@ class GAN(keras.Model):
     def gen_step(self, img):
         with tf.GradientTape() as tape:
             gen = self.gen(img, training=True)
-            d_gen_logits = self.disc(gen, training=False)
+            d_gen_logits = self.disc(gen, training=True)
             gen_loss = self.gen_hinge_loss(d_gen_logits)
             gen_loss = nn.compute_average_loss(gen_loss, global_batch_size=self.bsz)
 
