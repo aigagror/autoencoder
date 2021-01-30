@@ -99,7 +99,9 @@ def get_callbacks(args, ds_train, ds_val, fid_model):
         callbacks.append(GANCheckpoint(args))
 
         # FID
-        callbacks.append(FIDCallback(args, fid_model, ds_train, ds_val))
+        if args.fid:
+            callbacks.append(FIDCallback(args, fid_model, ds_train, ds_val))
+
     # Tensorboard
     callbacks.append(
         keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), histogram_freq=1, update_freq=args.update_freq))

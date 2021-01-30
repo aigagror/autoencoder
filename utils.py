@@ -29,6 +29,7 @@ parser.add_argument('--ae-lr', type=float, default=1e-3)
 parser.add_argument('--gen-lr', type=float, default=1e-3)
 parser.add_argument('--disc-lr', type=float, default=4e-3)
 parser.add_argument('--bsz', type=int)
+parser.add_argument('--fid', action='store_true')
 
 parser.add_argument('--steps-exec', type=int, help='steps per execution')
 parser.add_argument('--steps-epoch', type=int, help='steps per epoch')
