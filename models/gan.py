@@ -70,7 +70,7 @@ class GAN(keras.Model):
         return -d_gen_logits
 
     def disc_step(self, img):
-        gen = self.gen(img, training=False)
+        gen = self.gen(img, training=True)
         with tf.GradientTape() as tape:
             d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
             real_labels = tf.ones_like(d_real_logits)
