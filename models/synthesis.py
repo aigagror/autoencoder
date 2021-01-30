@@ -97,49 +97,49 @@ def synthesize(args, z, img_c):
              min(512, args.hdim), min(256, args.hdim), min(128, args.hdim),
              min(64, args.hdim), min(32, args.hdim), min(16, args.hdim)]
     if args.synthesis == 'affine':
-        img = layers.Dense(args.imsize * args.imsize * img_c, activation='tanh', name='affine-synth')(z)
+        img = layers.Dense(args.imsize * args.imsize * img_c, activation='tanh', name='affine')(z)
         img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
     elif args.synthesis == 'conv':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = layers.Conv2DTranspose(args.hdim, kernel_size=4, name='first-conv-synth-block-convt')(z)
+        img = layers.Conv2DTranspose(args.hdim, kernel_size=4, name='block0')(z)
         img = layers.ReLU()(img)
 
         # Hidden blocks
         i = None
         for i in range(len(hdims)):
-            prefix = f'hidden-conv-synth-block{i}'
+            prefix = f'block{i+1}'
             img = tfa.layers.SpectralNormalization(
-                layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'{prefix}-conv')(img)
-            img = layers.BatchNormalization(scale=False, name=f'{prefix}-norm')(img)
+                layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'{prefix}_conv')(img)
+            img = layers.BatchNormalization(scale=False, name=f'{prefix}_norm')(img)
             img = layers.ReLU()(img)
 
             if img.shape[1] == args.imsize:
                 break
 
         # To image
-        img = layers.Conv2D(img_c, 3, padding='same', activation='tanh', name=f'{hdims[i]}-to-img')(img)
+        img = layers.Conv2D(img_c, 3, padding='same', activation='tanh', name=f'{hdims[i]}_to_img')(img)
 
     elif args.synthesis == 'style':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = ConstBlock(args, 'const-block')(z)
-        img = FirstStyleSynthBlock(args, hdims[0], name='first-style-synth-block')(
+        img = ConstBlock(args, 'const_block')(z)
+        img = FirstStyleSynthBlock(args, hdims[0], name='block0')(
             (img, z))
 
         # Hidden blocks
         i = None
         for i in range(len(hdims) - 1):
-            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'hidden-style-synth-block{i}')((img, z))
+            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'block{i+1}')((img, z))
 
             if img.shape[1] == args.imsize:
                 break
 
         # To image
         img = tfa.layers.SpectralNormalization(layers.Conv2D(img_c, 1, activation='tanh'),
-                                               name=f'{hdims[i + 1]}-to-img')(img)
+                                               name=f'{hdims[i + 1]}_to_img')(img)
 
     else:
         raise Exception(f'unknown synthesis network: {args.synthesis}')
