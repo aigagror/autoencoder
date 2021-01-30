@@ -24,9 +24,6 @@ class GAN(keras.Model):
             'gen_acc': keras.metrics.Mean('gen_acc'),
             'real_prob': keras.metrics.Mean('real_prob'),
             'gen_prob': keras.metrics.Mean('gen_prob'),
-
-            'd_grad_norm': keras.metrics.Mean('d_grad_norm'),
-            'g_grad_norm': keras.metrics.Mean('g_grad_norm')
         }
 
     def call(self, imgs):
@@ -76,7 +73,7 @@ class GAN(keras.Model):
             real_labels = tf.ones_like(d_real_logits)
             gen_labels = tf.zeros_like(d_gen_logits)
 
-            disc_loss = self.disc_hinge_loss(d_real_logits, d_gen_logits)
+            disc_loss = self.bce(real_labels, d_real_logits) + self.bce(gen_labels, d_gen_logits)
             disc_loss = nn.compute_average_loss(disc_loss, global_batch_size=self.bsz)
 
             r1 = r1_penalty(self.disc, img)
@@ -97,17 +94,11 @@ class GAN(keras.Model):
         real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
         gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
 
-        # Measure average gradient norms
-        num_replicas = self.distribute_strategy.num_replicas_in_sync
-        all_grad_norms = [tf.norm(g) for g in grad]
-        grad_norm = tf.reduce_mean(all_grad_norms) / num_replicas
-
         # Return metrics
         info = {
             'disc_loss': disc_loss, 'r1': r1,
             'real_prob': real_prob, 'gen_prob': gen_prob,
             'real_acc': real_acc, 'gen_acc': gen_acc,
-            'd_grad_norm': grad_norm
         }
 
         return info
@@ -116,18 +107,13 @@ class GAN(keras.Model):
         with tf.GradientTape() as tape:
             gen = self.gen(img, training=True)
             d_gen_logits = self.disc(gen, training=True)
-            gen_loss = self.gen_hinge_loss(d_gen_logits)
+            gen_loss = self.bce(tf.ones_like(d_gen_logits), d_gen_logits)
             gen_loss = nn.compute_average_loss(gen_loss, global_batch_size=self.bsz)
 
         grad = tape.gradient(gen_loss, self.gen.trainable_weights)
         self.gen.optimizer.apply_gradients(zip(grad, self.gen.trainable_weights))
 
-        # Measure average gradient norms
-        num_replicas = self.distribute_strategy.num_replicas_in_sync
-        all_grad_norms = [tf.norm(g) for g in grad]
-        grad_norm = tf.reduce_mean(all_grad_norms) / num_replicas
-
-        return {'gen_loss': gen_loss, 'g_grad_norm': grad_norm}
+        return {'gen_loss': gen_loss}
 
     def train_step(self, img):
         d_metrics = self.disc_step(img)

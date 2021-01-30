@@ -1,5 +1,13 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 from tensorflow.keras import layers, losses
+
+
+def hw_flatten(x):
+    # Input shape x: [BATCH, HEIGHT, WIDTH, CHANNELS]
+    # flat the feature volume across the tensor width and height
+    x_shape = tf.shape(x)
+    return tf.reshape(x, [x_shape[0], -1, x_shape[-1]])  # return [BATCH, W*H, CHANNELS]
 
 
 class MyMSELoss(layers.Layer):
@@ -12,12 +20,34 @@ class MyMSELoss(layers.Layer):
         return recon
 
 
-class FooLoss(layers.Layer):
-    def call(self, img):
-        loss = tf.reduce_sum(img ** 2, axis=[1, 2, 3])
-        loss = tf.reduce_mean(loss)
-        self.add_loss(loss)
-        return img
+class SelfAttention(layers.Layer):
+    def __init__(self, number_of_filters):
+        super(SelfAttention, self).__init__()
+
+        self.f = tfa.layers.SpectralNormalization(layers.Conv2D(number_of_filters // 8, 1, padding='SAME'), name="f_x")
+        self.g = tfa.layers.SpectralNormalization(layers.Conv2D(number_of_filters // 8, 1, padding='SAME'), name="g_x")
+        self.h = tfa.layers.SpectralNormalization(layers.Conv2D(number_of_filters, 1, padding='SAME'), name="h_x")
+
+        self.add_weight('gamma', shape=[], trainable=True, initializer=0.0)
+
+        self.flatten = tf.keras.layers.Flatten()
+
+    def call(self, x):
+        f = self.f(x)
+        g = self.g(x)
+        h = self.h(x)
+
+        f_flatten = hw_flatten(f)
+        g_flatten = hw_flatten(g)
+        h_flatten = hw_flatten(h)
+
+        s = tf.matmul(g_flatten, f_flatten, transpose_b=True)  # [B,N,C] * [B, N, C] = [B, N, N]
+
+        b = tf.nn.softmax(s, axis=-1)
+        o = tf.matmul(b, h_flatten)
+        y = self.gamma * tf.reshape(o, tf.shape(x)) + x
+
+        return y
 
 
 class STDNorm(layers.Layer):
