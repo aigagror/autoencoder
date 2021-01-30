@@ -120,7 +120,7 @@ def synthesize(args, z, img_c):
             img = keras.Sequential([
                 tfa.layers.SpectralNormalization(layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False)
                                                  , name=f'{prefix}-conv'),
-                layers.BatchNormalization(name=f'{prefix}-norm'),
+                layers.BatchNormalization(scale=False, name=f'{prefix}-norm'),
                 layers.ReLU(),
             ], prefix)(img)
 
