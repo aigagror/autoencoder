@@ -49,8 +49,8 @@ def make_model(args, img_c, summarize):
             disc_out = encode(args, disc_in, out_dim=1)
             disc = keras.Model(disc_in, disc_out, name='discriminator')
 
-            gen.compile(keras.optimizers.Adam(args.gen_lr))
-            disc.compile(keras.optimizers.Adam(args.disc_lr))
+            gen.compile(keras.optimizers.Adam(args.gen_lr, beta_1=0, beta_2=0.99))
+            disc.compile(keras.optimizers.Adam(args.disc_lr, beta_1=0, beta_2=0.99))
 
             print('Starting with new model')
 
