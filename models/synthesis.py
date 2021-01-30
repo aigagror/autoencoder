@@ -109,7 +109,7 @@ def synthesize(args, z, img_c):
 
         # Hidden blocks
         i = None
-        for i in range(10 - int(np.log2(args.imsize)), len(hdims)):
+        for i in range(11 - int(np.log2(args.imsize)), len(hdims)):
             img = tfa.layers.SpectralNormalization(
                 layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'block{i + 1}_conv')(img)
             img = layers.BatchNormalization(scale=False, name=f'block{i + 1}_norm')(img)
