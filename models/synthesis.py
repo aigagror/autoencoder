@@ -103,8 +103,8 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = layers.Conv2DTranspose(args.hdim, kernel_size=4, activation='relu',
-                                     name='first-conv-synth-block-convt')(z)
+        img = layers.Conv2DTranspose(args.hdim, kernel_size=4, name='first-conv-synth-block-convt')(z)
+        img = layers.ReLU()(img)
 
         # Hidden blocks
         i = None
