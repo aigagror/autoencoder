@@ -1,6 +1,5 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
-from tensorflow import keras
 from tensorflow.keras import layers
 
 from models.custom_layers import LearnableNoise
@@ -98,31 +97,23 @@ def synthesize(args, z, img_c):
              min(512, args.hdim), min(256, args.hdim), min(128, args.hdim),
              min(64, args.hdim), min(32, args.hdim), min(16, args.hdim)]
     if args.synthesis == 'affine':
-        img = keras.Sequential([
-            layers.Dense(args.imsize * args.imsize * img_c, activation='tanh',
-                         name='dense-synth'),
-            layers.Reshape([args.imsize, args.imsize, img_c])
-        ], 'affine-synth')(z)
-
+        img = layers.Dense(args.imsize * args.imsize * img_c, activation='tanh', name='affine-synth')(z)
+        img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
     elif args.synthesis == 'conv':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        prefix = f'first-conv-synth-block'
-        img = keras.Sequential([
-            layers.Conv2DTranspose(args.hdim, kernel_size=4, name=f'{prefix}-convt', activation='relu'),
-        ], prefix)(z)
+        img = layers.Conv2DTranspose(args.hdim, kernel_size=4, activation='relu',
+                                     name='first-conv-synth-block-convt')(z)
 
         # Hidden blocks
         i = None
         for i in range(len(hdims)):
             prefix = f'hidden-conv-synth-block{i}'
-            img = keras.Sequential([
-                tfa.layers.SpectralNormalization(layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False)
-                                                 , name=f'{prefix}-conv'),
-                layers.BatchNormalization(scale=False, name=f'{prefix}-norm'),
-                layers.ReLU(),
-            ], prefix)(img)
+            img = tfa.layers.SpectralNormalization(
+                layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'{prefix}-conv')(img)
+            img = layers.BatchNormalization(scale=False, name=f'{prefix}-norm')(img)
+            img = layers.ReLU()(img)
 
             if img.shape[1] == args.imsize:
                 break
