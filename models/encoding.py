@@ -56,6 +56,9 @@ def encode(args, img, out_dim):
     else:
         raise Exception(f'unknown encoder network {args.encoder}')
 
+    # Cast to float32
+    output = layers.Activation('linear', dtype=tf.float32)(output)
+
     # Encoder output
     tf.debugging.assert_shapes([(output, tf.TensorShape([None, out_dim]))])
     return output
