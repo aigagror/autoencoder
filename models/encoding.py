@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow.keras import layers
+from models import custom_layers
 
 
 def encode(args, img, out_dim):
@@ -22,6 +23,8 @@ def encode(args, img, out_dim):
             out = tfa.layers.SpectralNormalization(
                 layers.Conv2D(in_h, 4, 2, padding='same'), name=f'block{i + 1}_conv')(out)
             out = layers.LeakyReLU(0.1)(out)
+            if out.shape[1] == 32:
+                out = custom_layers.SelfAttention(in_h)
 
             if out.shape[1] == 4:
                 break

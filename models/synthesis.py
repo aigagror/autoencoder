@@ -3,7 +3,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow.keras import layers
 
-from models.custom_layers import LearnableNoise
+from models.custom_layers import LearnableNoise, SelfAttention
 
 
 class StyleConv2D(layers.Layer):
@@ -114,6 +114,8 @@ def synthesize(args, z, img_c):
                 layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'block{i + 1}_conv')(img)
             img = layers.BatchNormalization(scale=False, name=f'block{i + 1}_norm')(img)
             img = layers.ReLU()(img)
+            if img.shape[1] == 32:
+                img = SelfAttention(hdims[i])(img)
 
         # To image
         img = tfa.layers.SpectralNormalization(layers.Conv2D(img_c, 3, padding='same', activation='tanh'),
