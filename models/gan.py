@@ -22,8 +22,9 @@ class GAN(keras.Model):
 
             'real_acc': keras.metrics.Mean('real_acc'),
             'gen_acc': keras.metrics.Mean('gen_acc'),
-            'real_prob': keras.metrics.Mean('real_prob'),
-            'gen_prob': keras.metrics.Mean('gen_prob'),
+
+            'd_real_logits': keras.metrics.Mean('d_real_logits'),
+            'd_gen_logits': keras.metrics.Mean('d_gen_logits'),
         }
 
     def call(self, imgs):
@@ -84,21 +85,19 @@ class GAN(keras.Model):
         self.disc.optimizer.apply_gradients(zip(grad, self.disc.trainable_weights))
 
         # Discriminator probabilities and accuracies
-        real_prob = tf.sigmoid(d_real_logits)
-        gen_prob = tf.sigmoid(d_gen_logits)
-        real_acc = keras.metrics.binary_accuracy(real_labels, real_prob)
-        gen_acc = keras.metrics.binary_accuracy(gen_labels, gen_prob)
+        real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits, threshold=0)
+        gen_acc = keras.metrics.binary_accuracy(gen_labels, d_gen_logits, threshold=0)
 
-        real_prob = nn.compute_average_loss(real_prob, global_batch_size=self.bsz)
-        gen_prob = nn.compute_average_loss(gen_prob, global_batch_size=self.bsz)
+        d_real_logits = nn.compute_average_loss(d_real_logits, global_batch_size=self.bsz)
+        d_gen_logits = nn.compute_average_loss(d_gen_logits, global_batch_size=self.bsz)
         real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
         gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
 
         # Return metrics
         info = {
             'disc_loss': disc_loss, 'r1': r1,
-            'real_prob': real_prob, 'gen_prob': gen_prob,
             'real_acc': real_acc, 'gen_acc': gen_acc,
+            'd_real_logits': d_real_logits, 'd_gen_logits': d_gen_logits,
         }
 
         return info

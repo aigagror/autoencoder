@@ -23,6 +23,11 @@ class MyTestCase(unittest.TestCase):
             tf.debugging.assert_greater_equal(sample, -1.0)
             tf.debugging.assert_less_equal(sample, 1.0)
 
+            # Probablisitic asserts
+            min_val, max_val = tf.reduce_min(sample), tf.reduce_max(sample)
+            tf.debugging.assert_less(min_val, 0.0)
+            tf.debugging.assert_greater(max_val, 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()
