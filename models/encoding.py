@@ -24,7 +24,7 @@ def encode(args, img, out_dim):
                 layers.Conv2D(in_h, 4, 2, padding='same'), name=f'block{i + 1}_conv')(out)
             out = layers.LeakyReLU(0.1)(out)
             if out.shape[1] == 32:
-                out = custom_layers.SelfAttention(in_h)
+                out = custom_layers.SelfAttention(in_h)(out)
 
             if out.shape[1] == 4:
                 break

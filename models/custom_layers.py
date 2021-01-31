@@ -21,12 +21,12 @@ class MyMSELoss(layers.Layer):
 
 
 class SelfAttention(layers.Layer):
-    def __init__(self, number_of_filters):
-        super(SelfAttention, self).__init__()
+    def __init__(self, nfilters):
+        super().__init__()
 
-        self.f = tfa.layers.SpectralNormalization(layers.Conv2D(number_of_filters // 8, 1, padding='SAME'), name="f_x")
-        self.g = tfa.layers.SpectralNormalization(layers.Conv2D(number_of_filters // 8, 1, padding='SAME'), name="g_x")
-        self.h = tfa.layers.SpectralNormalization(layers.Conv2D(number_of_filters, 1, padding='SAME'), name="h_x")
+        self.f = tfa.layers.SpectralNormalization(layers.Conv2D(nfilters // 8, 1, padding='SAME'), name="f_x")
+        self.g = tfa.layers.SpectralNormalization(layers.Conv2D(nfilters // 8, 1, padding='SAME'), name="g_x")
+        self.h = tfa.layers.SpectralNormalization(layers.Conv2D(nfilters, 1, padding='SAME'), name="h_x")
 
         self.gamma = self.add_weight(shape=[], initializer='zeros', trainable=True)
 
