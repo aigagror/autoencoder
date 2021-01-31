@@ -30,8 +30,6 @@ class SelfAttention(layers.Layer):
 
         self.gamma = self.add_weight(shape=[], initializer='zeros', trainable=True)
 
-        self.flatten = tf.keras.layers.Flatten()
-
     def call(self, x):
         f = self.f(x)
         g = self.g(x)
