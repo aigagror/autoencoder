@@ -2,8 +2,6 @@ import tensorflow as tf
 from tensorflow import keras, nn
 from tqdm.auto import tqdm
 
-from models import r1_penalty
-
 
 class GAN(keras.Model):
     def __init__(self, args, gen, disc):
@@ -16,9 +14,8 @@ class GAN(keras.Model):
 
         # Metrics
         self.metrics_dict = {
-            'disc_loss': keras.metrics.Mean('disc_loss'),
-            'gen_loss': keras.metrics.Mean('gen_loss'),
-            'r1': keras.metrics.Mean('r1'),
+            'd_loss': keras.metrics.Mean('d_loss'),
+            'g_loss': keras.metrics.Mean('g_loss'),
 
             'real_acc': keras.metrics.Mean('real_acc'),
             'gen_acc': keras.metrics.Mean('gen_acc'),
@@ -59,29 +56,26 @@ class GAN(keras.Model):
         # `reset_states()` yourself at the time of your choosing.
         return self.metrics_dict.values()
 
-    def disc_hinge_loss(self, d_real_logits, d_gen_logits):
-        real_loss = tf.nn.relu(1. - d_real_logits)
-        gen_loss = tf.nn.relu(1. + d_gen_logits)
-        return real_loss + gen_loss
-
-    def gen_hinge_loss(self, d_gen_logits):
-        return -d_gen_logits
-
-    def disc_grad(self, img):
-        gen = self.gen(img, training=True)
+    def train_step(self, img):
         with tf.GradientTape() as tape:
+            gen = self.gen(img, training=True)
             d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
-            real_labels = tf.ones_like(d_real_logits)
-            gen_labels = tf.zeros_like(d_gen_logits)
+            real_labels, gen_labels = tf.ones_like(d_real_logits), tf.zeros_like(d_gen_logits)
 
-            disc_loss = self.bce(real_labels, d_real_logits) + self.bce(gen_labels, d_gen_logits)
-            disc_loss = nn.compute_average_loss(disc_loss, global_batch_size=self.bsz)
+            # Discriminator loss
+            d_loss = self.bce(real_labels, d_real_logits) + self.bce(gen_labels, d_gen_logits)
+            d_loss = nn.compute_average_loss(d_loss, global_batch_size=self.bsz)
 
-            r1 = r1_penalty(self.disc, img)
-            r1 = nn.compute_average_loss(r1, global_batch_size=self.bsz)
-            loss = disc_loss + self.r1_weight * r1
+            # Generator loss
+            g_loss = -d_gen_logits
+            g_loss = nn.compute_average_loss(g_loss, global_batch_size=self.bsz)
 
-        d_grad = tape.gradient(loss, self.disc.trainable_weights)
+        # Gradient descent
+        d_grad = tape.gradient(d_loss, self.disc.trainable_weights)
+        g_grad = tape.gradient(g_loss, self.disc.trainable_weights)
+
+        self.disc.optimizer.apply_gradients(zip(d_grad, self.disc.trainable_weights))
+        self.gen.optimizer.apply_gradients(zip(g_grad, self.gen.trainable_weights))
 
         # Discriminator probabilities and accuracies
         real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits, threshold=0)
@@ -92,39 +86,16 @@ class GAN(keras.Model):
         real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
         gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
 
-        # Return metrics
-        info = {
-            'disc_loss': disc_loss, 'r1': r1,
+        # Metrics
+        metrics = {
+            'd_loss': d_loss, 'g_loss': g_loss,
             'real_acc': real_acc, 'gen_acc': gen_acc,
             'd_real_logits': d_real_logits, 'd_gen_logits': d_gen_logits,
         }
 
-        return d_grad, info
-
-    def gen_grad(self, img):
-        with tf.GradientTape() as tape:
-            gen = self.gen(img, training=True)
-            d_gen_logits = self.disc(gen, training=True)
-            gen_loss = -d_gen_logits
-            gen_loss = nn.compute_average_loss(gen_loss, global_batch_size=self.bsz)
-
-        g_grad = tape.gradient(gen_loss, self.gen.trainable_weights)
-        info = {'gen_loss': gen_loss}
-
-        return g_grad, info
-
-    def train_step(self, img):
-        d_grad, d_metrics = self.disc_grad(img)
-        g_grad, g_metrics = self.gen_grad(img)
-
-        # Gradient descent
-        self.disc.optimizer.apply_gradients(zip(d_grad, self.disc.trainable_weights))
-        self.gen.optimizer.apply_gradients(zip(g_grad, self.gen.trainable_weights))
-
         # Update metrics
         num_replicas = self.distribute_strategy.num_replicas_in_sync
-        for metrics in [d_metrics, g_metrics]:
-            for key, val in metrics.items():
-                self.metrics_dict[key].update_state(val * num_replicas)
+        for key, val in metrics.items():
+            self.metrics_dict[key].update_state(val * num_replicas)
 
         return {m.name: m.result() for m in self.metrics}
