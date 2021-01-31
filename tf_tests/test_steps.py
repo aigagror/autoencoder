@@ -21,8 +21,8 @@ class StepTests(unittest.TestCase):
         gan = models.make_model(self.args, ds_info['channels'], summarize=False)
 
         img = next(iter(ds_train))
-        disc_vals = gan.disc_step(img)
-        gen_vals = gan.gen_step(img)
+        disc_vals = gan.disc_grad(img)
+        gen_vals = gan.gen_grad(img)
 
         self.assertIsInstance(disc_vals, dict)
         self.assertIsInstance(gen_vals, dict)
