@@ -28,7 +28,7 @@ class SelfAttention(layers.Layer):
         self.g = tfa.layers.SpectralNormalization(layers.Conv2D(nfilters // 8, 1, padding='SAME'), name="g_x")
         self.h = tfa.layers.SpectralNormalization(layers.Conv2D(nfilters, 1, padding='SAME'), name="h_x")
 
-        self.gamma = self.add_weight(shape=[], initializer='zeros', trainable=True)
+        self.gamma = self.add_weight(name='gamma', shape=[], initializer='zeros', trainable=True)
 
     def call(self, x):
         f = self.f(x)
