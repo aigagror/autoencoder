@@ -28,7 +28,7 @@ class SelfAttention(layers.Layer):
         self.g = tfa.layers.SpectralNormalization(layers.Conv2D(number_of_filters // 8, 1, padding='SAME'), name="g_x")
         self.h = tfa.layers.SpectralNormalization(layers.Conv2D(number_of_filters, 1, padding='SAME'), name="h_x")
 
-        self.add_weight('gamma', shape=[], trainable=True, initializer=tf.zeros_initializer)
+        self.gamma = self.add_weight(shape=[], initializer='zeros', trainable=True)
 
         self.flatten = tf.keras.layers.Flatten()
 
