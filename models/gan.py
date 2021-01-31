@@ -57,7 +57,7 @@ class GAN(keras.Model):
         return self.metrics_dict.values()
 
     def train_step(self, img):
-        with tf.GradientTape() as tape:
+        with tf.GradientTape(persistent=True) as tape:
             gen = self.gen(img, training=True)
             d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
             real_labels, gen_labels = tf.ones_like(d_real_logits), tf.zeros_like(d_gen_logits)
