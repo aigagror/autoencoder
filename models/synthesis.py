@@ -55,7 +55,7 @@ class FirstStyleSynthBlock(layers.Layer):
         super().__init__(name=name)
         self.style_conv = StyleConv2D(args, args.zdim, hdim, 'style-conv')
         self.noise = LearnableNoise(args, hdim, 'noise')
-        self.act = layers.LeakyReLU(0.1)
+        self.act = layers.LeakyReLU(args.lrelu)
 
     def call(self, input):
         img, z = input
@@ -76,7 +76,7 @@ class HiddenStyleSynthBlock(layers.Layer):
         self.noise1 = LearnableNoise(args, out_c, 'noise1')
         self.noise2 = LearnableNoise(args, out_c, 'noise2')
 
-        self.act = layers.LeakyReLU(0.1)
+        self.act = layers.LeakyReLU(args.lrelu)
 
     def call(self, input):
         img, z = input

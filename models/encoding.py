@@ -12,7 +12,7 @@ def encode(args, img, out_dim):
     elif args.encoder == 'conv':
         # First block
         out = tfa.layers.SpectralNormalization(layers.Conv2D(16, 1), name='block0_conv')(img)
-        out = layers.LeakyReLU(0.1)(out)
+        out = layers.LeakyReLU(args.lrelu)(out)
 
         # Hidden blocks
         hdims = [16, 32, 64, 128, 256, 512, 512, 512, 512]
@@ -22,7 +22,7 @@ def encode(args, img, out_dim):
             in_h, out_h = hdims[i], hdims[i + 1]
             out = tfa.layers.SpectralNormalization(
                 layers.Conv2D(in_h, 4, 2, padding='same'), name=f'block{i + 1}_conv')(out)
-            out = layers.LeakyReLU(0.1)(out)
+            out = layers.LeakyReLU(args.lrelu)(out)
             if out.shape[1] == 32:
                 out = custom_layers.SelfAttention(in_h)(out)
 
@@ -31,7 +31,7 @@ def encode(args, img, out_dim):
 
         # Last block
         out = tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 4, padding='valid'), name=f'block{i + 2}_conv')(out)
-        out = layers.LeakyReLU(0.1)(out)
+        out = layers.LeakyReLU(args.lrelu)(out)
 
         out = layers.Flatten()(out)
         out = tfa.layers.SpectralNormalization(layers.Dense(out_dim), name=f'block{i + 2}_dense')(out)
