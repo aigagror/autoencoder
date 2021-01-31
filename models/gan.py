@@ -107,7 +107,7 @@ class GAN(keras.Model):
         with tf.GradientTape() as tape:
             gen = self.gen(img, training=True)
             d_gen_logits = self.disc(gen, training=True)
-            gen_loss = self.bce(tf.ones_like(d_gen_logits), d_gen_logits)
+            gen_loss = -d_gen_logits
             gen_loss = nn.compute_average_loss(gen_loss, global_batch_size=self.bsz)
 
         grad = tape.gradient(gen_loss, self.gen.trainable_weights)
