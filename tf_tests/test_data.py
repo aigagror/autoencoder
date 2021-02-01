@@ -17,16 +17,12 @@ class MyTestCase(unittest.TestCase):
         val_sample = next(iter(ds_val))
 
         for sample in [train_sample, val_sample]:
-            tf.debugging.assert_type(sample, 'float')
-            tf.debugging.assert_type(sample, 'float')
-
-            tf.debugging.assert_greater_equal(sample, -1.0)
-            tf.debugging.assert_less_equal(sample, 1.0)
+            tf.debugging.assert_type(sample, tf.uint8)
+            tf.debugging.assert_type(sample, tf.uint8)
 
             # Probablisitic asserts
             min_val, max_val = tf.reduce_min(sample), tf.reduce_max(sample)
-            tf.debugging.assert_less(min_val, 0.0)
-            tf.debugging.assert_greater(max_val, 0.0)
+            tf.debugging.assert_greater(max_val, 127 * tf.ones_like(max_val))
 
 
 if __name__ == '__main__':

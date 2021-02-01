@@ -16,8 +16,8 @@ def plot_sample_images(model, ds):
 
     ret = imgs, recons
 
-    imgs = (imgs + 1) / 2
-    recons = (recons + 1) / 2
+    tf.debugging.assert_type(imgs, tf.uint8)
+    recons = tf.cast(recons, tf.uint8)
     if imgs.shape[-1] == 1:
         imgs = tf.squeeze(imgs, axis=-1)
         recons = tf.squeeze(recons, axis=-1)

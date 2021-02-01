@@ -45,12 +45,10 @@ def load_datasets(args):
     else:
         raise Exception(f'unknown data {args.data}')
 
-    # Preprocess and cache
+    # Preprocess
     def preprocess(img):
         if rand_flip:
             img = tf.image.random_flip_left_right(img)
-        img = tf.cast(img, args.dtype)
-        img = img / 127.5 - 1
         return img
 
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)

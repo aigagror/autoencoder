@@ -10,7 +10,7 @@ def synthesize(args, z, img_c):
     hdims = [min(h, args.hdim) for h in hdims]
 
     if args.synthesis == 'affine':
-        img = layers.Dense(args.imsize * args.imsize * img_c, activation='tanh', name='affine')(z)
+        img = layers.Dense(args.imsize * args.imsize * img_c, name='affine')(z)
         img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
     elif args.synthesis == 'conv':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
@@ -36,8 +36,7 @@ def synthesize(args, z, img_c):
                 img = SelfAttention(args, hdims[i])(img)
 
         # To image
-        img = make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same',
-                          activation='tanh')(img)
+        img = make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same')(img)
 
 
     elif args.synthesis == 'style':
@@ -54,12 +53,15 @@ def synthesize(args, z, img_c):
             img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'block{i + 1}')((img, z))
 
         # To image
-        img = make_conv2d(f'{hdims[i + 1]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same',
-                          activation='tanh')(img)
+        img = make_conv2d(f'{hdims[i + 1]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same')(img)
 
     else:
         raise Exception(f'unknown synthesis network: {args.synthesis}')
 
     # Synthesize
     tf.debugging.assert_shapes([(img, tf.TensorShape([None, args.imsize, args.imsize, img_c]))])
+
+    # Image range
+    img = layers.Activation('sigmoid')(img)
+    img = img * 255
     return img
