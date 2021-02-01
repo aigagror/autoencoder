@@ -17,11 +17,11 @@ class GAN(keras.Model):
             'd_loss': keras.metrics.Mean('d_loss'),
             'g_loss': keras.metrics.Mean('g_loss'),
 
-            'real_acc': keras.metrics.Mean('real_acc'),
-            'gen_acc': keras.metrics.Mean('gen_acc'),
-
             'd_real_logits': keras.metrics.Mean('d_real_logits'),
             'd_gen_logits': keras.metrics.Mean('d_gen_logits'),
+
+            'real_acc': keras.metrics.Mean('real_acc'),
+            'gen_acc': keras.metrics.Mean('gen_acc'),
         }
 
     def d_hinge_loss(self, d_real_logits, d_gen_logits):
