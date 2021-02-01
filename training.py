@@ -26,6 +26,8 @@ def plot_sample_images(model, ds):
         ax[1].imshow(recons[0], vmin=0, vmax=1)
     else:
         for i, (img, recon) in enumerate(zip(imgs, recons)):
+            if i >= 6:
+                break
             ax[0, i].imshow(img)
             ax[1, i].imshow(recon)
 
