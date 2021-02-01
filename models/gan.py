@@ -65,7 +65,7 @@ class GAN(keras.Model):
         return self.metrics_dict.values()
 
     def train_step(self, img):
-        with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
+        with tf.GradientTape(persistent=True) as tape:
             gen = self.gen(img, training=True)
             d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
             real_labels, gen_labels = tf.ones_like(d_real_logits), tf.zeros_like(d_gen_logits)
@@ -79,8 +79,8 @@ class GAN(keras.Model):
             g_loss = nn.compute_average_loss(g_loss, global_batch_size=self.bsz)
 
         # Gradient descent
-        d_grad = d_tape.gradient(d_loss, self.disc.trainable_weights)
-        g_grad = g_tape.gradient(g_loss, self.gen.trainable_weights)
+        d_grad = tape.gradient(d_loss, self.disc.trainable_weights)
+        g_grad = tape.gradient(g_loss, self.gen.trainable_weights)
 
         self.disc.optimizer.apply_gradients(zip(d_grad, self.disc.trainable_weights))
         self.gen.optimizer.apply_gradients(zip(g_grad, self.gen.trainable_weights))
