@@ -25,12 +25,12 @@ class GAN(keras.Model):
         }
 
     def d_hinge_loss(self, d_real_logits, d_gen_logits):
-        real_loss = tf.reduce_mean(tf.nn.relu(1. - d_real_logits))
-        gen_loss = tf.reduce_mean(tf.nn.relu(1. + d_gen_logits))
+        real_loss = tf.nn.relu(1. - d_real_logits)
+        gen_loss = tf.nn.relu(1. + d_gen_logits)
         return real_loss + gen_loss
 
     def g_hinge_loss(self, d_logits_fake):
-        return - tf.reduce_mean(d_logits_fake)
+        return -d_logits_fake
 
     def call(self, imgs):
         return self.gen(imgs)
