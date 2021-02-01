@@ -50,6 +50,9 @@ def load_datasets(args):
             img = tf.image.random_flip_left_right(img)
         img = tf.cast(img, args.dtype)
         img = img / 127.5 - 1
+
+        # Set size
+        img = tf.reshape(img, [args.imsize, args.imsize, img_c])
         return img
 
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)
