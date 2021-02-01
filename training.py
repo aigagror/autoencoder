@@ -11,9 +11,6 @@ def plot_sample_images(model, ds):
     imgs = next(iter(ds))
     recons = model.tf_gen(imgs)
 
-    imgs = tf.cast(imgs[:4], tf.float32)
-    recons = tf.cast(recons[:4], tf.float32)
-
     ret = imgs, recons
 
     tf.debugging.assert_type(imgs, tf.uint8)
