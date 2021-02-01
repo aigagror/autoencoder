@@ -48,8 +48,8 @@ def load_datasets(args):
     def preprocess(img):
         if rand_flip:
             img = tf.image.random_flip_left_right(img)
-        img = img / 127.5 - 1
         img = tf.cast(img, args.dtype)
+        img = img / 127.5 - 1
         return img
 
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)
