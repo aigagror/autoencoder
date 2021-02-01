@@ -9,7 +9,7 @@ import datetime
 
 def plot_sample_images(model, ds):
     imgs = next(iter(ds))
-    imgs = imgs[:6]
+    imgs = imgs[:4]
     recons = model.tf_gen(imgs)
 
     ret = imgs, recons
