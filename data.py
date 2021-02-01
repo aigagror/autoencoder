@@ -10,12 +10,12 @@ def load_datasets(args):
         train_size, val_size = 28000, 2000
         if args.tpu:
             # GCS
-            train_files = tf.data.Dataset.list_files('gs://aigagror/datasets/celeba_hq/train-*')
-            val_data = tf.data.TFRecordDataset('gs://aigagror/datasets/celeba_hq/val-00000-of-00001')
+            train_files = tf.data.Dataset.list_files(f'gs://aigagror/datasets/celeba_hq/{args.imsize}/train-*')
+            val_data = tf.data.TFRecordDataset(f'gs://aigagror/datasets/celeba_hq/{args.imsize}/val-00000-of-00001')
         else:
             # Google Drive
-            train_files = tf.data.Dataset.list_files('/gdrive/MyDrive/datasets/celeba_hq/train-*')
-            val_data = tf.data.TFRecordDataset('/gdrive/MyDrive/datasets/celeba_hq/val-00000-of-00001')
+            train_files = tf.data.Dataset.list_files(f'/gdrive/MyDrive/datasets/celeba_hq/{args.imsize}/train-*')
+            val_data = tf.data.TFRecordDataset(f'/gdrive/MyDrive/datasets/celeba_hq/{args.imsize}/val-00000-of-00001')
 
         train_data = train_files.interleave(tf.data.TFRecordDataset, num_parallel_calls=tf.data.AUTOTUNE)
 
@@ -46,7 +46,6 @@ def load_datasets(args):
 
     # Preprocess and cache
     def preprocess(img):
-        img = tf.image.resize(img, [args.imsize, args.imsize])
         if rand_flip:
             img = tf.image.random_flip_left_right(img)
         img = img / 127.5 - 1
