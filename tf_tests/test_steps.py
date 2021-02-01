@@ -17,6 +17,7 @@ class StepTests(unittest.TestCase):
         utils.setup(self.args)
 
     def test_gan_steps(self):
+        self.skipTest('legacy')
         ds_train, ds_val, ds_info = data.load_datasets(self.args)
         gan = models.make_model(self.args, ds_info['channels'], summarize=False)
 
