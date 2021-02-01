@@ -10,7 +10,7 @@ from models.style_content import SC_VGG19
 from models.synthesis import synthesize
 
 
-def make_model(args, img_c, summarize):
+def make_model(args, img_c):
     if args.model == 'autoencoder':
         if args.load:
             model = keras.models.load_model(os.path.join(args.out, 'ae'))

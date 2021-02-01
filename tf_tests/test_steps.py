@@ -19,7 +19,7 @@ class StepTests(unittest.TestCase):
     def test_gan_steps(self):
         self.skipTest('legacy')
         ds_train, ds_val, ds_info = data.load_datasets(self.args)
-        gan = models.make_model(self.args, ds_info['channels'], summarize=False)
+        gan = models.make_model(self.args, ds_info['channels'])
 
         img = next(iter(ds_train))
         disc_vals = gan.disc_grad(img)
