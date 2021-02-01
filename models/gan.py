@@ -68,13 +68,14 @@ class GAN(keras.Model):
         with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
             gen = self.gen(img, training=True)
             d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
+            real_labels, gen_labels = tf.ones_like(d_real_logits), tf.zeros_like(d_gen_logits)
 
             # Discriminator loss
-            d_loss = self.d_hinge_loss(d_real_logits, d_gen_logits)
+            d_loss = self.bce(real_labels, d_real_logits) + self.bce(gen_labels, d_gen_logits)
             d_loss = nn.compute_average_loss(d_loss, global_batch_size=self.bsz)
 
             # Generator loss
-            g_loss = self.g_hinge_loss(d_gen_logits)
+            g_loss = self.bce(real_labels, d_gen_logits)
             g_loss = nn.compute_average_loss(g_loss, global_batch_size=self.bsz)
 
         # Gradient descent
@@ -85,7 +86,6 @@ class GAN(keras.Model):
         self.gen.optimizer.apply_gradients(zip(g_grad, self.gen.trainable_weights))
 
         # Discriminator accuracies
-        real_labels, gen_labels = tf.ones_like(d_real_logits), tf.zeros_like(d_gen_logits)
         real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits, threshold=0)
         gen_acc = keras.metrics.binary_accuracy(gen_labels, d_gen_logits, threshold=0)
         real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
