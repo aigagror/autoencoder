@@ -11,7 +11,9 @@ def hw_flatten(x):
 
 class NormalizeImage(layers.Layer):
     def call(self, inputs, **kwargs):
-        return inputs / 127.5 - 1
+        inputs -= 0.45 * 255
+        inputs /= 0.225 * 255
+        return inputs
 
 class MyMSELoss(layers.Layer):
     def call(self, inputs):
