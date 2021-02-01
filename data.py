@@ -20,7 +20,8 @@ def load_datasets(args):
         train_data = train_files.interleave(tf.data.TFRecordDataset, num_parallel_calls=tf.data.AUTOTUNE)
 
         def decode_rgb(data):
-            img = tf.image.decode_image(data, channels=3, expand_animations=False)
+            crop_window = [0, 0, args.imsize, args.imsize]
+            img = tf.image.decode_and_crop_jpeg(data, crop_window, channels=3)
             return img
 
         ds_train = train_data.map(decode_rgb, tf.data.AUTOTUNE)
@@ -50,9 +51,6 @@ def load_datasets(args):
             img = tf.image.random_flip_left_right(img)
         img = tf.cast(img, args.dtype)
         img = img / 127.5 - 1
-
-        # Set size
-        img = tf.reshape(img, [args.imsize, args.imsize, img_c])
         return img
 
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)
