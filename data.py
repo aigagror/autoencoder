@@ -55,8 +55,6 @@ def load_datasets(args):
 
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)
     ds_val = ds_val.map(preprocess, tf.data.AUTOTUNE)
-    ds_train = ds_train.cache()
-    ds_val = ds_val.cache()
 
     # Batch, shuffle and prefetch
     ds_train = (
