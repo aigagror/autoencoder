@@ -47,6 +47,7 @@ parser.add_argument('--policy', choices=['mixed_bfloat16', 'float32'], default='
 
 # Other
 parser.add_argument('--debug', action='store_true')
+parser.add_argument('--profile-batch', type=int, nargs='*')
 
 
 def setup(args):

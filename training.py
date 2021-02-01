@@ -1,10 +1,10 @@
+import datetime
 import os
 import shutil
 
 import tensorflow as tf
 from matplotlib import pyplot as plt
 from tensorflow import keras
-import datetime
 
 
 def plot_sample_images(model, ds):
@@ -58,6 +58,7 @@ class GANCheckpoint(keras.callbacks.Callback):
         self.model.gen.save(os.path.join(self.args.out, 'gen'))
         self.model.disc.save(os.path.join(self.args.out, 'disc'))
 
+
 class FIDCallback(keras.callbacks.Callback):
     def __init__(self, args, fid_model, ds_train, ds_val):
         super().__init__()
@@ -84,6 +85,7 @@ class FIDCallback(keras.callbacks.Callback):
         duration = end - now
         print(f'{fid:.3} FID. {duration} wall time')
 
+
 def get_callbacks(args, ds_train, ds_val, fid_model):
     callbacks = [
         PlotImagesCallback(args, ds_val),
@@ -102,7 +104,8 @@ def get_callbacks(args, ds_train, ds_val, fid_model):
 
     # Tensorboard
     callbacks.append(
-        keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), write_graph=False, update_freq=args.update_freq))
+        keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), write_graph=False, update_freq=args.update_freq,
+                                    profile_batch=args.profile_batch))
     return callbacks
 
 
