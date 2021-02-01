@@ -16,27 +16,26 @@ def encode(args, img, out_dim):
         out = layers.LeakyReLU(args.lrelu)(out)
 
         # Hidden blocks
-        hdims = [16, 32, 64, 128, 256, 512, 512, 512, 512]
-        hdims = [min(h, args.hdim) for h in hdims]
-        i, in_h, out_h = None, None, None
-        for i in range(len(hdims) - 1):
-            in_h, out_h = hdims[i], hdims[i + 1]
+        layer_hdims = [32, 64, 128, 256, 512, 512, 512, 512]
+        layer_hdims = [min(h, args.hdim) for h in layer_hdims]
+        i, hdim = None, None
+        for i, hdim in enumerate(layer_hdims):
             out = tfa.layers.SpectralNormalization(
-                layers.Conv2D(in_h, 3, padding='same'), name=f'block{i + 1}_conv1')(out)
+                layers.Conv2D(hdim, 3, padding='same'), name=f'block{i + 1}_conv1')(out)
             out = layers.LeakyReLU(args.lrelu)(out)
             out = tfa.layers.SpectralNormalization(
-                layers.Conv2D(in_h, 3, padding='same'), name=f'block{i + 1}_conv2')(out)
+                layers.Conv2D(hdim, 3, padding='same'), name=f'block{i + 1}_conv2')(out)
             out = layers.LeakyReLU(args.lrelu)(out)
             out = layers.AveragePooling2D()(out)
 
             if out.shape[1] == 32:
-                out = custom_layers.SelfAttention(in_h)(out)
+                out = custom_layers.SelfAttention(hdim)(out)
 
             if out.shape[1] == 4:
                 break
 
         # Last block
-        out = tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 4, padding='valid'), name=f'block{i + 2}_conv')(out)
+        out = tfa.layers.SpectralNormalization(layers.Conv2D(hdim, 4, padding='valid'), name=f'block{i + 2}_conv')(out)
         out = layers.LeakyReLU(args.lrelu)(out)
 
         out = layers.Flatten()(out)
