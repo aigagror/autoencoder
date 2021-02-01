@@ -20,14 +20,13 @@ def load_datasets(args):
         train_data = train_files.interleave(tf.data.TFRecordDataset, num_parallel_calls=tf.data.AUTOTUNE)
 
         def decode_rgb(data):
-            crop_window = [0, 0, args.imsize, args.imsize]
-            img = tf.image.decode_and_crop_jpeg(data, crop_window, channels=3)
+            img = tf.image.decode_jpeg(data, channels=3)
             return img
 
         ds_train = train_data.map(decode_rgb, tf.data.AUTOTUNE)
         ds_val = val_data.map(decode_rgb, tf.data.AUTOTUNE)
 
-    elif args.data == 'mnist':
+    elif args.data.endswith('mnist'):
         # MNIST
         img_c = 1
         rand_flip = False
@@ -42,6 +41,11 @@ def load_datasets(args):
         ds_train = ds_train.map(get_img, tf.data.AUTOTUNE)
         ds_val = ds_val.map(get_img, tf.data.AUTOTUNE)
 
+        if args.data.startswith('fake-'):
+            ds_train = ds_train.take(32)
+            ds_val = ds_val.take(32)
+            train_size, val_size = 32, 32
+
     else:
         raise Exception(f'unknown data {args.data}')
 
@@ -49,6 +53,9 @@ def load_datasets(args):
     def preprocess(img):
         if rand_flip:
             img = tf.image.random_flip_left_right(img)
+
+        img = tf.image.resize(img, [args.imsize, args.imsize])
+        img = tf.cast(img, tf.uint8)
         return img
 
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)
