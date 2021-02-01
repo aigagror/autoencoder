@@ -18,6 +18,7 @@ def make_model(args, img_c, summarize):
         else:
             # Autoencoder
             img = keras.Input((args.imsize, args.imsize, img_c), name='img-in')
+            img = custom_layers.NormalizeImage()(img)
             z = encode(args, img, out_dim=args.zdim)
             recon = synthesize(args, z, img_c)
             recon = SC_VGG19(args)((img, recon))
@@ -47,7 +48,8 @@ def make_model(args, img_c, summarize):
 
             # Discriminator
             disc_in = keras.Input((args.imsize, args.imsize, img_c), name='disc-in')
-            disc_out = encode(args, disc_in, out_dim=1)
+            disc_out = custom_layers.NormalizeImage()(disc_in)
+            disc_out = encode(args, disc_out, out_dim=1)
             disc = keras.Model(disc_in, disc_out, name='discriminator')
 
             gen.compile(keras.optimizers.Adam(args.gen_lr, beta_1=0.0, beta_2=0.99))

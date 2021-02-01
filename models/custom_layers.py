@@ -9,6 +9,9 @@ def hw_flatten(x):
     x_shape = tf.shape(x)
     return tf.reshape(x, [x_shape[0], -1, x_shape[-1]])  # return [BATCH, W*H, CHANNELS]
 
+class NormalizeImage(layers.Layer):
+    def call(self, inputs, **kwargs):
+        return inputs / 127.5 - 1
 
 class MyMSELoss(layers.Layer):
     def call(self, inputs):
