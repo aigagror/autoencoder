@@ -102,7 +102,8 @@ def get_callbacks(args, ds_train, ds_val, fid_model):
 
     # Tensorboard
     callbacks.append(
-        keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), histogram_freq=1, update_freq=args.update_freq))
+        keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), write_graph=False, update_freq=args.update_freq,
+                                    profile_batch=0))
     return callbacks
 
 
