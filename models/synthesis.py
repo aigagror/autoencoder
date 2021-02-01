@@ -111,12 +111,12 @@ def synthesize(args, z, img_c):
         i = None
         for i in range(11 - int(np.log2(args.imsize)), len(hdims)):
             img = tfa.layers.SpectralNormalization(
-                layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'block{i + 1}_conv1')(img)
+                layers.Conv2D(hdims[i], 3, padding='same', use_bias=False), name=f'block{i + 1}_conv1')(img)
             img = layers.BatchNormalization(name=f'block{i + 1}_norm1')(img)
             img = layers.ReLU()(img)
 
             img = tfa.layers.SpectralNormalization(
-                layers.Conv2DTranspose(hdims[i], 4, 2, padding='same', use_bias=False), name=f'block{i + 1}_conv2')(img)
+                layers.Conv2D(hdims[i], 3, padding='same', use_bias=False), name=f'block{i + 1}_conv2')(img)
             img = layers.BatchNormalization(name=f'block{i + 1}_norm2')(img)
             img = layers.ReLU()(img)
 
