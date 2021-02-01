@@ -1,96 +1,8 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow_addons as tfa
 from tensorflow.keras import layers
 
-from models.custom_layers import LearnableNoise, SelfAttention
-
-
-class StyleConv2D(layers.Layer):
-    def __init__(self, args, in_c, out_c, name):
-        super().__init__(name=name)
-        self.in_c, self.out_c = in_c, out_c
-        self.in_scale = tfa.layers.SpectralNormalization(layers.Conv2D(in_c, 1), name='in-scale')
-        self.in_bias = tfa.layers.SpectralNormalization(layers.Conv2D(in_c, 1), name='in-bias')
-
-        self.conv = tfa.layers.SpectralNormalization(layers.Conv2D(out_c, 3, padding='same', use_bias=False),
-                                                     name='style')
-        self.norm = tfa.layers.InstanceNormalization(name='norm')
-
-    def call(self, input):
-        # latent variable z is expected to be of shape [bsz, 1, 1, zdim]
-        img, z = input
-
-        # Style std
-        in_scale = self.in_scale(z)
-        in_bias = self.in_bias(z)
-        img = img * in_scale + in_bias
-
-        # Convolve
-        img = self.conv(img)
-
-        # Normalize
-        img = self.norm(img)
-
-        return img
-
-
-class ConstBlock(layers.Layer):
-    def __init__(self, args, name):
-        super().__init__(name=name)
-        self.args = args
-
-    def build(self, input_shape):
-        super().build(input_shape)
-        self.seed = self.add_weight('seed', shape=[1, 4, 4, self.args.zdim], trainable=True)
-
-    def call(self, z):
-        bsz = tf.shape(z)[0]
-        img = tf.repeat(self.seed, bsz, axis=0)
-        return img
-
-
-class FirstStyleSynthBlock(layers.Layer):
-    def __init__(self, args, hdim, name):
-        super().__init__(name=name)
-        self.style_conv = StyleConv2D(args, args.zdim, hdim, 'style-conv')
-        self.noise = LearnableNoise(args, hdim, 'noise')
-        self.act = layers.LeakyReLU(args.lrelu)
-
-    def call(self, input):
-        img, z = input
-        img = self.style_conv((img, z))
-        img = self.noise(img)
-        img = self.act(img)
-        return img
-
-
-class HiddenStyleSynthBlock(layers.Layer):
-    def __init__(self, args, in_c, out_c, name):
-        super().__init__(name=name)
-        self.upsampling = layers.UpSampling2D(interpolation='bilinear')
-
-        self.style_conv1 = StyleConv2D(args, in_c, out_c, 'style-conv1')
-        self.style_conv2 = StyleConv2D(args, out_c, out_c, 'style-conv2')
-
-        self.noise1 = LearnableNoise(args, out_c, 'noise1')
-        self.noise2 = LearnableNoise(args, out_c, 'noise2')
-
-        self.act = layers.LeakyReLU(args.lrelu)
-
-    def call(self, input):
-        img, z = input
-        img = self.upsampling(img)
-
-        img = self.style_conv1((img, z))
-        img = self.noise1(img)
-        img = self.act(img)
-
-        img = self.style_conv2((img, z))
-        img = self.noise2(img)
-        img = self.act(img)
-
-        return img
+from models.custom_layers import SelfAttention, ConstBlock, FirstStyleSynthBlock, HiddenStyleSynthBlock, make_conv2d
 
 
 def synthesize(args, z, img_c):
@@ -110,24 +22,23 @@ def synthesize(args, z, img_c):
         # Hidden blocks
         i = None
         for i in range(11 - int(np.log2(args.imsize)), len(hdims)):
-            img = tfa.layers.SpectralNormalization(
-                layers.Conv2D(hdims[i], 3, padding='same', use_bias=False), name=f'block{i + 1}_conv1')(img)
+            img = make_conv2d(f'block{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3, padding='same')(img)
             img = layers.BatchNormalization(name=f'block{i + 1}_norm1')(img)
             img = layers.ReLU()(img)
 
-            img = tfa.layers.SpectralNormalization(
-                layers.Conv2D(hdims[i], 3, padding='same', use_bias=False), name=f'block{i + 1}_conv2')(img)
+            img = make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3, padding='same')(img)
             img = layers.BatchNormalization(name=f'block{i + 1}_norm2')(img)
             img = layers.ReLU()(img)
 
             img = layers.UpSampling2D(interpolation='bilinear')(img)
 
             if img.shape[1] == 32:
-                img = SelfAttention(hdims[i])(img)
+                img = SelfAttention(args, hdims[i])(img)
 
         # To image
-        img = tfa.layers.SpectralNormalization(layers.Conv2D(img_c, 3, padding='same', activation='tanh'),
-                                               name=f'{hdims[i]}_to_img')(img)
+        img = make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same',
+                          activation='tanh')(img)
+
 
     elif args.synthesis == 'style':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
@@ -143,8 +54,8 @@ def synthesize(args, z, img_c):
             img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'block{i + 1}')((img, z))
 
         # To image
-        img = tfa.layers.SpectralNormalization(layers.Conv2D(img_c, 1, activation='tanh'),
-                                               name=f'{hdims[i + 1]}_to_img')(img)
+        img = make_conv2d(f'{hdims[i + 1]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same',
+                          activation='tanh')(img)
 
     else:
         raise Exception(f'unknown synthesis network: {args.synthesis}')

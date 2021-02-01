@@ -2,12 +2,12 @@ import os
 
 from tensorflow import keras
 
-from models.custom_layers import LatentMap
+from models.custom_layers import LatentMap, FirstStyleSynthBlock, HiddenStyleSynthBlock
 from models.custom_losses import r1_penalty
 from models.encoding import encode
 from models.gan import GAN
 from models.style_content import SC_VGG19
-from models.synthesis import FirstStyleSynthBlock, HiddenStyleSynthBlock, synthesize
+from models.synthesis import synthesize
 
 
 def make_model(args, img_c, summarize):

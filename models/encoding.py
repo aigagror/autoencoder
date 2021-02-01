@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow_addons as tfa
 from tensorflow.keras import layers
 
 from models import custom_layers
@@ -12,7 +11,7 @@ def encode(args, img, out_dim):
 
     elif args.encoder == 'conv':
         # First block
-        out = tfa.layers.SpectralNormalization(layers.Conv2D(16, 1), name='block0_conv')(img)
+        out = custom_layers.make_conv2d('block0_conv', args.sn, filters=16, kernel_size=1)(img)
         out = layers.LeakyReLU(args.lrelu)(out)
 
         # Hidden blocks
@@ -21,26 +20,29 @@ def encode(args, img, out_dim):
         i, in_h, out_h = None, None, None
         for i in range(len(layer_hdims) - 1):
             in_h, out_h = layer_hdims[i], layer_hdims[i + 1]
-            out = tfa.layers.SpectralNormalization(
-                layers.Conv2D(in_h, 3, padding='same'), name=f'block{i + 1}_conv1')(out)
+            out = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=in_h, kernel_size=3,
+                                            padding='same')(out)
             out = layers.LeakyReLU(args.lrelu)(out)
-            out = tfa.layers.SpectralNormalization(
-                layers.Conv2D(out_h, 3, padding='same'), name=f'block{i + 1}_conv2')(out)
+
+            out = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=out_h, kernel_size=3,
+                                            padding='same')(out)
             out = layers.LeakyReLU(args.lrelu)(out)
+
             out = layers.AveragePooling2D()(out)
 
             if out.shape[1] == 32:
-                out = custom_layers.SelfAttention(out_h)(out)
+                out = custom_layers.SelfAttention(args, out_h)(out)
 
             if out.shape[1] == 4:
                 break
 
         # Last block
-        out = tfa.layers.SpectralNormalization(layers.Conv2D(out_h, 4, padding='valid'), name=f'block{i + 2}_conv')(out)
+        out = custom_layers.make_conv2d(f'block{i + 2}_conv', args.sn, filters=out_h, kernel_size=4, padding='valid')(
+            out)
         out = layers.LeakyReLU(args.lrelu)(out)
 
         out = layers.Flatten()(out)
-        out = tfa.layers.SpectralNormalization(layers.Dense(out_dim), name=f'block{i + 2}_dense')(out)
+        out = custom_layers.make_dense(f'block{i + 2}_dense', args.sn, units=out_dim)(out)
     else:
         raise Exception(f'unknown encoder network {args.encoder}')
 
