@@ -10,11 +10,11 @@ def load_datasets(args):
         train_size, val_size = 28000, 2000
         if args.tpu:
             # GCS
-            train_files = tf.data.Dataset.list_files(f'gs://aigagror/datasets/celeba_hq/{args.imsize}/train-*')
+            train_files = tf.data.Dataset.list_files(f'gs://aigagror/datasets/celeba_hq/{args.imsize}/train-*', shuffle=True)
             val_data = tf.data.TFRecordDataset(f'gs://aigagror/datasets/celeba_hq/{args.imsize}/val-00000-of-00001')
         else:
             # Google Drive
-            train_files = tf.data.Dataset.list_files(f'/gdrive/MyDrive/datasets/celeba_hq/{args.imsize}/train-*')
+            train_files = tf.data.Dataset.list_files(f'/gdrive/MyDrive/datasets/celeba_hq/{args.imsize}/train-*', shuffle=True)
             val_data = tf.data.TFRecordDataset(f'/gdrive/MyDrive/datasets/celeba_hq/{args.imsize}/val-00000-of-00001')
 
         train_data = train_files.interleave(tf.data.TFRecordDataset, num_parallel_calls=tf.data.AUTOTUNE)
@@ -35,8 +35,8 @@ def load_datasets(args):
         def get_img(input):
             return input['image']
 
-        ds_train = tfds.load('mnist', try_gcs=True, split='train')
-        ds_val = tfds.load('mnist', try_gcs=True, split='test')
+        ds_train = tfds.load('mnist', try_gcs=True, split='train', shuffle_files=True)
+        ds_val = tfds.load('mnist', try_gcs=True, split='test', shuffle_files=True)
 
         ds_train = ds_train.map(get_img, tf.data.AUTOTUNE)
         ds_val = ds_val.map(get_img, tf.data.AUTOTUNE)
@@ -64,7 +64,6 @@ def load_datasets(args):
     # Batch, shuffle and prefetch
     ds_train = (
         ds_train
-            .shuffle(1024)
             .batch(args.bsz, drop_remainder=True)
             .prefetch(tf.data.AUTOTUNE)
     )
