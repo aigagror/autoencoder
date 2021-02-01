@@ -67,7 +67,7 @@ class GAN(keras.Model):
             d_loss = nn.compute_average_loss(d_loss, global_batch_size=self.bsz)
 
             # Generator loss
-            g_loss = -d_gen_logits
+            g_loss = self.bce(real_labels, d_gen_logits)
             g_loss = nn.compute_average_loss(g_loss, global_batch_size=self.bsz)
 
         # Gradient descent
