@@ -7,7 +7,7 @@ from models import custom_layers
 def encode(args, img, out_dim):
     if args.encoder == 'affine':
         out = layers.Flatten()(img)
-        out = layers.Dense(out_dim, name='affine')(out)
+        out = custom_layers.make_dense('affine', args.sn, units=out_dim)(out)
 
     elif args.encoder == 'conv':
         # First block

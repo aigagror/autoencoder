@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from models.custom_layers import SelfAttention, ConstBlock, FirstStyleSynthBlock, HiddenStyleSynthBlock, make_conv2d
+from models.custom_layers import SelfAttention, ConstBlock, FirstStyleSynthBlock, HiddenStyleSynthBlock, make_conv2d, make_dense
 
 
 def synthesize(args, z, img_c):
@@ -10,7 +10,7 @@ def synthesize(args, z, img_c):
     hdims = [min(h, args.hdim) for h in hdims]
 
     if args.synthesis == 'affine':
-        img = layers.Dense(args.imsize * args.imsize * img_c, name='affine')(z)
+        img = make_dense('affine', args.sn, units=args.imsize * args.imsize * img_c)(z)
         img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
     elif args.synthesis == 'conv':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
