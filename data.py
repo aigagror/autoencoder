@@ -71,18 +71,8 @@ def load_datasets(args):
     ds_val = ds_val.map(preprocess, tf.data.AUTOTUNE)
 
     # Batch and prefetch
-    ds_train = (
-        ds_train
-            .batch(args.bsz)
-            .prefetch(tf.data.AUTOTUNE)
-    )
-
-    ds_val = (
-        ds_val
-            .shuffle(1024)
-            .batch(args.bsz)
-            .prefetch(tf.data.AUTOTUNE)
-    )
+    ds_train = ds_train.batch(args.bsz).prefetch(tf.data.AUTOTUNE)
+    ds_val = ds_val.batch(args.bsz).prefetch(tf.data.AUTOTUNE)
 
     info = {
         'channels': img_c,
