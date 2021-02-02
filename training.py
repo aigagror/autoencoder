@@ -120,9 +120,8 @@ def train(args, model, ds_train, ds_val, ds_info, fid_model=None):
     callbacks = get_callbacks(args, ds_train, ds_val, fid_model)
 
     # Train
-    if args.steps_epoch is not None:
-        steps_per_epoch = args.steps_epoch
-    else:
+    steps_per_epoch = args.steps_epoch
+    if steps_per_epoch is None:
         steps_per_epoch = ds_info['train-size'] // args.bsz
         print(f'steps-per-epoch not specified. setting it to train-size // bsz = {steps_per_epoch}')
     try:

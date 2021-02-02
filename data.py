@@ -49,6 +49,13 @@ def load_datasets(args):
     else:
         raise Exception(f'unknown data {args.data}')
 
+    # Cache and shuffle
+    ds_train = ds_train.cache().shuffle(train_size)
+    ds_val = ds_val.cache().shuffle(val_size)
+
+    # Repeat train dataset
+    ds_train = ds_train.repeat()
+
     # Preprocess
     def preprocess(img):
         if rand_flip:
@@ -61,20 +68,18 @@ def load_datasets(args):
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)
     ds_val = ds_val.map(preprocess, tf.data.AUTOTUNE)
 
-    ds_train = ds_train.cache()
-    ds_val = ds_val.cache()
 
-    # Batch, shuffle and prefetch
+    # Batch and prefetch
     ds_train = (
         ds_train
-            .batch(args.bsz, drop_remainder=True)
+            .batch(args.bsz)
             .prefetch(tf.data.AUTOTUNE)
     )
 
     ds_val = (
         ds_val
             .shuffle(1024)
-            .batch(args.bsz, drop_remainder=True)
+            .batch(args.bsz)
             .prefetch(tf.data.AUTOTUNE)
     )
 
