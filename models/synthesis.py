@@ -24,7 +24,7 @@ def synthesize(args, z, img_c):
         # Hidden blocks
         i = None
         for i in range(11 - int(np.log2(args.imsize)), len(hdims)):
-            img = layers.UpSampling2D()(img)
+            img = layers.UpSampling2D(interpolation=args.upsample)(img)
 
             img = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3,
                                             padding='same')(img)

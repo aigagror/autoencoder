@@ -175,7 +175,7 @@ class FirstStyleSynthBlock(layers.Layer):
 class HiddenStyleSynthBlock(layers.Layer):
     def __init__(self, args, in_c, out_c, name):
         super().__init__(name=name)
-        self.upsampling = layers.UpSampling2D(interpolation='bilinear')
+        self.upsampling = layers.UpSampling2D(interpolation=args.upsample)
 
         self.style_conv1 = StyleConv2D(args, in_c, out_c, 'style-conv1')
         self.style_conv2 = StyleConv2D(args, out_c, out_c, 'style-conv2')
