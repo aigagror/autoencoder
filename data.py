@@ -10,11 +10,13 @@ def load_datasets(args):
         train_size, val_size = 28000, 2000
         if args.tpu:
             # GCS
-            train_files = tf.data.Dataset.list_files(f'gs://aigagror/datasets/celeba_hq/{args.imsize}/train-*', shuffle=True)
+            train_files = tf.data.Dataset.list_files(f'gs://aigagror/datasets/celeba_hq/{args.imsize}/train-*',
+                                                     shuffle=True)
             val_data = tf.data.TFRecordDataset(f'gs://aigagror/datasets/celeba_hq/{args.imsize}/val-00000-of-00001')
         else:
             # Google Drive
-            train_files = tf.data.Dataset.list_files(f'/gdrive/MyDrive/datasets/celeba_hq/{args.imsize}/train-*', shuffle=True)
+            train_files = tf.data.Dataset.list_files(f'/gdrive/MyDrive/datasets/celeba_hq/{args.imsize}/train-*',
+                                                     shuffle=True)
             val_data = tf.data.TFRecordDataset(f'/gdrive/MyDrive/datasets/celeba_hq/{args.imsize}/val-00000-of-00001')
 
         train_data = train_files.interleave(tf.data.TFRecordDataset, num_parallel_calls=tf.data.AUTOTUNE)
@@ -68,7 +70,6 @@ def load_datasets(args):
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)
     ds_val = ds_val.map(preprocess, tf.data.AUTOTUNE)
 
-
     # Batch and prefetch
     ds_train = (
         ds_train
@@ -82,10 +83,6 @@ def load_datasets(args):
             .batch(args.bsz)
             .prefetch(tf.data.AUTOTUNE)
     )
-
-    if args.steps_epoch is not None:
-        ds_train = ds_train.repeat()
-        print('steps per epoch set. repeating training dataset')
 
     info = {
         'channels': img_c,
