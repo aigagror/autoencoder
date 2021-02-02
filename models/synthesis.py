@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from models.custom_layers import SelfAttention, ConstBlock, FirstStyleSynthBlock, HiddenStyleSynthBlock, make_conv2d, make_dense
+from models import custom_layers
 
 
 def synthesize(args, z, img_c):
@@ -10,7 +10,7 @@ def synthesize(args, z, img_c):
     hdims = [min(h, args.hdim) for h in hdims]
 
     if args.synthesis == 'affine':
-        img = make_dense('affine', args.sn, units=args.imsize * args.imsize * img_c)(z)
+        img = custom_layers.make_dense('affine', args.sn, units=args.imsize * args.imsize * img_c)(z)
         img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
     elif args.synthesis == 'conv':
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
@@ -22,24 +22,28 @@ def synthesize(args, z, img_c):
         # Hidden blocks
         i = None
         for i in range(11 - int(np.log2(args.imsize)), len(hdims)):
-            img = make_conv2d(f'block{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3, padding='same')(img)
+            img = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3,
+                                            padding='same')(img)
             img = layers.BatchNormalization(name=f'block{i + 1}_norm1')(img)
             img = layers.ReLU()(img)
 
-            img = make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3, padding='same')(img)
+            img = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
+                                            padding='same')(img)
             img = layers.BatchNormalization(name=f'block{i + 1}_norm2')(img)
             img = layers.ReLU()(img)
 
             img = layers.UpSampling2D(interpolation='bilinear')(img)
 
             if img.shape[1] == 32:
-                img = SelfAttention(args, hdims[i])(img)
+                img = custom_layers.SelfAttention(args, hdims[i])(img)
 
         # To image
-        img = make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same')(img)
+        img = custom_layers.make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same')(
+            img)
 
 
     elif args.synthesis == 'style':
+        from models.custom_layers import ConstBlock, FirstStyleSynthBlock, HiddenStyleSynthBlock
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
@@ -53,7 +57,8 @@ def synthesize(args, z, img_c):
             img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'block{i + 1}')((img, z))
 
         # To image
-        img = make_conv2d(f'{hdims[i + 1]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same')(img)
+        img = custom_layers.make_conv2d(f'{hdims[i + 1]}_to_img', args.sn, filters=img_c, kernel_size=3,
+                                        padding='same')(img)
 
     else:
         raise Exception(f'unknown synthesis network: {args.synthesis}')
