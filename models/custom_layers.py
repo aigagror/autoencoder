@@ -51,9 +51,9 @@ class SelfAttention(layers.Layer):
     def __init__(self, args, nfilters):
         super().__init__()
 
-        self.f = make_conv2d('f_x', args.sn, filters=nfilters // 8, kernel_size=1, padding='same')
-        self.g = make_conv2d('g_x', args.sn, filters=nfilters // 8, kernel_size=1, padding='same')
-        self.h = make_conv2d('h_x', args.sn, filters=nfilters, kernel_size=1, padding='same')
+        self.f = make_conv2d('f_x', args.sn, filters=nfilters // 8, kernel_size=1)
+        self.g = make_conv2d('g_x', args.sn, filters=nfilters // 8, kernel_size=1)
+        self.h = make_conv2d('h_x', args.sn, filters=nfilters, kernel_size=1)
 
         self.gamma = self.add_weight(name='gamma', shape=[], initializer='zeros', trainable=True)
 
