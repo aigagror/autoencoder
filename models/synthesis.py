@@ -34,7 +34,7 @@ def synthesize(args, z, img_c):
             if img.shape[1] == 32:
                 img = custom_layers.SelfAttention(args, hdims[i])(img)
 
-            if args.synthesis.startswith('small-'):
+            if not args.synthesis.startswith('small-'):
                 img = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
                                                 padding='same')(img)
                 img = layers.BatchNormalization(name=f'block{i + 1}_norm2')(img)
