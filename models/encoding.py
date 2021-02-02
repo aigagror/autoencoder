@@ -41,7 +41,7 @@ def encode(args, img, out_dim):
                                                 padding='same')(out)
                 out = layers.LeakyReLU(args.lrelu)(out)
 
-                out = layers.MaxPool2D()(out)
+                out = layers.AveragePooling2D()(out)
 
             if out.shape[1] == 4:
                 break
