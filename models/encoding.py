@@ -38,11 +38,8 @@ def encode(args, img, out_dim):
                 break
 
         # Last block
-        out = custom_layers.make_conv2d(f'block{i + 2}_conv', args.sn, filters=out_h, kernel_size=4)(out)
-        out = layers.LeakyReLU(args.lrelu)(out)
-
+        out = custom_layers.make_conv2d(f'block{i + 2}_conv', args.sn, filters=out_dim, kernel_size=4)(out)
         out = layers.Flatten()(out)
-        out = custom_layers.make_dense(f'block{i + 2}_dense', args.sn, units=out_dim)(out)
     else:
         raise Exception(f'unknown encoder network {args.encoder}')
 
