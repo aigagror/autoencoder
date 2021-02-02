@@ -12,7 +12,7 @@ def synthesize(args, z, img_c):
     if args.synthesis == 'affine':
         img = custom_layers.make_dense('affine', args.sn, units=args.imsize * args.imsize * img_c)(z)
         img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
-    elif args.synthesis == 'conv':
+    elif args.synthesis.endswith('conv'):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
@@ -27,10 +27,11 @@ def synthesize(args, z, img_c):
             img = layers.BatchNormalization(name=f'block{i + 1}_norm1')(img)
             img = layers.ReLU()(img)
 
-            img = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
-                                            padding='same')(img)
-            img = layers.BatchNormalization(name=f'block{i + 1}_norm2')(img)
-            img = layers.ReLU()(img)
+            if 'small' not in args.synthesis:
+                img = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
+                                                padding='same')(img)
+                img = layers.BatchNormalization(name=f'block{i + 1}_norm2')(img)
+                img = layers.ReLU()(img)
 
             img = layers.UpSampling2D(interpolation='bilinear')(img)
 

@@ -9,7 +9,7 @@ def encode(args, img, out_dim):
         out = layers.Flatten()(img)
         out = custom_layers.make_dense('affine', args.sn, units=out_dim)(out)
 
-    elif args.encoder == 'conv':
+    elif args.encoder.endswith('conv'):
         # First block
         out = custom_layers.make_conv2d('block0_conv', args.sn, filters=16, kernel_size=1)(img)
         out = layers.LeakyReLU(args.lrelu)(out)
@@ -24,9 +24,10 @@ def encode(args, img, out_dim):
                                             padding='same')(out)
             out = layers.LeakyReLU(args.lrelu)(out)
 
-            out = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=out_h, kernel_size=3,
-                                            padding='same')(out)
-            out = layers.LeakyReLU(args.lrelu)(out)
+            if 'small' not in args.encoder:
+                out = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=out_h, kernel_size=3,
+                                                padding='same')(out)
+                out = layers.LeakyReLU(args.lrelu)(out)
 
             out = layers.AveragePooling2D()(out)
 
