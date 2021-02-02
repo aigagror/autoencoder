@@ -27,6 +27,9 @@ def synthesize(args, z, img_c):
             img = layers.BatchNormalization(name=f'block{i + 1}_norm1')(img)
             img = layers.ReLU()(img)
 
+            if img.shape[1] == 32:
+                img = custom_layers.SelfAttention(args, hdims[i])(img)
+
             if 'small' not in args.synthesis:
                 img = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
                                                 padding='same')(img)
@@ -34,9 +37,6 @@ def synthesize(args, z, img_c):
                 img = layers.ReLU()(img)
 
             img = layers.UpSampling2D(interpolation='bilinear')(img)
-
-            if img.shape[1] == 32:
-                img = custom_layers.SelfAttention(args, hdims[i])(img)
 
         # To image
         img = custom_layers.make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same')(

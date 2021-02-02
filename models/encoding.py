@@ -24,6 +24,9 @@ def encode(args, img, out_dim):
                                             padding='same')(out)
             out = layers.LeakyReLU(args.lrelu)(out)
 
+            if out.shape[1] == 32:
+                out = custom_layers.SelfAttention(args, in_h)(out)
+
             if 'small' not in args.encoder:
                 out = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=out_h, kernel_size=3,
                                                 padding='same')(out)
@@ -31,8 +34,6 @@ def encode(args, img, out_dim):
 
             out = layers.AveragePooling2D()(out)
 
-            if out.shape[1] == 32:
-                out = custom_layers.SelfAttention(args, out_h)(out)
 
             if out.shape[1] == 4:
                 break
