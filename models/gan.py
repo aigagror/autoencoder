@@ -66,6 +66,7 @@ class GAN(keras.Model):
 
     def train_step(self, img):
         pass
+        return {}
         # with tf.GradientTape(persistent=True) as tape:
         #     gen = self.gen(img, training=True)
         #     d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
