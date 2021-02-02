@@ -24,27 +24,17 @@ def synthesize(args, z, img_c):
         # Hidden blocks
         i = None
         for i in range(11 - int(np.log2(args.imsize)), len(hdims)):
+            img = layers.UpSampling2D(interpolation='bilinear')(img)
+
+            img = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3,
+                                            padding='same')(img)
+            img = layers.BatchNormalization(name=f'block{i + 1}_norm1')(img)
+            img = layers.LeakyReLU(args.lrelu)(img)
+
+            if img.shape[1] == 32:
+                img = custom_layers.SelfAttention(args, hdims[i])(img)
+
             if args.synthesis.startswith('small-'):
-                # Small layer
-                img = custom_layers.make_conv2d_trans(f'block{i + 1}_conv', args.sn, filters=hdims[i], kernel_size=4,
-                                                      strides=2, padding='same')(img)
-                img = layers.BatchNormalization(name=f'block{i + 1}_norm')(img)
-                img = layers.LeakyReLU(args.lrelu)(img)
-
-                if img.shape[1] == 32:
-                    img = custom_layers.SelfAttention(args, hdims[i])(img)
-            else:
-                # Standard layer
-                img = layers.UpSampling2D(interpolation='bilinear')(img)
-
-                img = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3,
-                                                padding='same')(img)
-                img = layers.BatchNormalization(name=f'block{i + 1}_norm1')(img)
-                img = layers.LeakyReLU(args.lrelu)(img)
-
-                if img.shape[1] == 32:
-                    img = custom_layers.SelfAttention(args, hdims[i])(img)
-
                 img = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
                                                 padding='same')(img)
                 img = layers.BatchNormalization(name=f'block{i + 1}_norm2')(img)
