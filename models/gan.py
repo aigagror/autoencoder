@@ -100,10 +100,4 @@ class GAN(keras.Model):
             'real_acc': real_acc, 'gen_acc': gen_acc,
             'd_real_logits': d_real_logits, 'd_gen_logits': d_gen_logits,
         }
-
-        # Update metrics
-        num_replicas = self.distribute_strategy.num_replicas_in_sync
-        for key, val in metrics.items():
-            self.metrics_dict[key].update_state(val * num_replicas)
-
-        return {m.name: m.result() for m in self.metrics}
+        return metrics

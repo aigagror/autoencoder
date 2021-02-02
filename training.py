@@ -89,6 +89,8 @@ class FIDCallback(keras.callbacks.Callback):
 def get_callbacks(args, ds_train, ds_val, fid_model):
     callbacks = [
         PlotImagesCallback(args, ds_val),
+        keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), write_graph=False, update_freq=args.update_freq,
+                                    profile_batch=args.profile_batch)
     ]
     if args.model == 'autoencoder':
         model_path = os.path.join(args.out, 'ae')
@@ -102,10 +104,6 @@ def get_callbacks(args, ds_train, ds_val, fid_model):
         if args.fid:
             callbacks.append(FIDCallback(args, fid_model, ds_train, ds_val))
 
-    # Tensorboard
-    callbacks.append(
-        keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), write_graph=False, update_freq=args.update_freq,
-                                    profile_batch=args.profile_batch))
     return callbacks
 
 
