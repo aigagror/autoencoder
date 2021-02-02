@@ -65,27 +65,26 @@ class GAN(keras.Model):
         return self.metrics_dict.values()
 
     def train_step(self, img):
-        pass
+        with tf.GradientTape(persistent=True) as tape:
+            gen = self.gen(img, training=True)
+            d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
+            real_labels, gen_labels = tf.ones_like(d_real_logits), tf.zeros_like(d_gen_logits)
+
+            # Discriminator loss
+            d_loss = self.bce(real_labels, d_real_logits) + self.bce(gen_labels, d_gen_logits)
+            d_loss = nn.compute_average_loss(d_loss, global_batch_size=self.bsz)
+
+            # Generator loss
+            g_loss = self.bce(real_labels, d_gen_logits)
+            g_loss = nn.compute_average_loss(g_loss, global_batch_size=self.bsz)
+
+        # Gradient descent
+        d_grad = tape.gradient(d_loss, self.disc.trainable_weights)
+        g_grad = tape.gradient(g_loss, self.gen.trainable_weights)
+
+        self.disc.optimizer.apply_gradients(zip(d_grad, self.disc.trainable_weights))
+        self.gen.optimizer.apply_gradients(zip(g_grad, self.gen.trainable_weights))
         return {'foo': 0}
-        # with tf.GradientTape(persistent=True) as tape:
-        #     gen = self.gen(img, training=True)
-        #     d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
-        #     real_labels, gen_labels = tf.ones_like(d_real_logits), tf.zeros_like(d_gen_logits)
-        #
-        #     # Discriminator loss
-        #     d_loss = self.bce(real_labels, d_real_logits) + self.bce(gen_labels, d_gen_logits)
-        #     d_loss = nn.compute_average_loss(d_loss, global_batch_size=self.bsz)
-        #
-        #     # Generator loss
-        #     g_loss = self.bce(real_labels, d_gen_logits)
-        #     g_loss = nn.compute_average_loss(g_loss, global_batch_size=self.bsz)
-        #
-        # # Gradient descent
-        # d_grad = tape.gradient(d_loss, self.disc.trainable_weights)
-        # g_grad = tape.gradient(g_loss, self.gen.trainable_weights)
-        #
-        # self.disc.optimizer.apply_gradients(zip(d_grad, self.disc.trainable_weights))
-        # self.gen.optimizer.apply_gradients(zip(g_grad, self.gen.trainable_weights))
         #
         # # Discriminator accuracies
         # real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits, threshold=0)
