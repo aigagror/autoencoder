@@ -65,7 +65,7 @@ class GAN(keras.Model):
         return self.metrics_dict.values()
 
     def train_step(self, img):
-        with tf.GradientTape() as d_tape, tf.GradientTape() as g_tape:
+        with tf.GradientTape(persistent=True) as tape:
             gen = self.gen(img, training=True)
             d_real_logits, d_gen_logits = self.disc(img, training=True), self.disc(gen, training=True)
             real_labels, gen_labels = tf.ones_like(d_real_logits), tf.zeros_like(d_gen_logits)
@@ -79,32 +79,31 @@ class GAN(keras.Model):
             g_loss = nn.compute_average_loss(g_loss, global_batch_size=self.bsz)
 
         # Gradient descent
-        d_grad = d_tape.gradient(d_loss, self.disc.trainable_weights)
-        g_grad = g_tape.gradient(g_loss, self.gen.trainable_weights)
+        d_grad = tape.gradient(d_loss, self.disc.trainable_weights)
+        g_grad = tape.gradient(g_loss, self.gen.trainable_weights)
 
         self.disc.optimizer.apply_gradients(zip(d_grad, self.disc.trainable_weights))
         self.gen.optimizer.apply_gradients(zip(g_grad, self.gen.trainable_weights))
-        return {'foo': 0}
-        #
-        # # Discriminator accuracies
-        # real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits, threshold=0)
-        # gen_acc = keras.metrics.binary_accuracy(gen_labels, d_gen_logits, threshold=0)
-        # real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
-        # gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
-        #
-        # d_real_logits = nn.compute_average_loss(d_real_logits, global_batch_size=self.bsz)
-        # d_gen_logits = nn.compute_average_loss(d_gen_logits, global_batch_size=self.bsz)
-        #
-        # # Metrics
-        # metrics = {
-        #     'd_loss': d_loss, 'g_loss': g_loss,
-        #     'real_acc': real_acc, 'gen_acc': gen_acc,
-        #     'd_real_logits': d_real_logits, 'd_gen_logits': d_gen_logits,
-        # }
-        #
-        # # Update metrics
-        # num_replicas = self.distribute_strategy.num_replicas_in_sync
-        # for key, val in metrics.items():
-        #     self.metrics_dict[key].update_state(val * num_replicas)
-        #
-        # return {m.name: m.result() for m in self.metrics}
+
+        # Discriminator accuracies
+        real_acc = keras.metrics.binary_accuracy(real_labels, d_real_logits, threshold=0)
+        gen_acc = keras.metrics.binary_accuracy(gen_labels, d_gen_logits, threshold=0)
+        real_acc = nn.compute_average_loss(real_acc, global_batch_size=self.bsz)
+        gen_acc = nn.compute_average_loss(gen_acc, global_batch_size=self.bsz)
+
+        d_real_logits = nn.compute_average_loss(d_real_logits, global_batch_size=self.bsz)
+        d_gen_logits = nn.compute_average_loss(d_gen_logits, global_batch_size=self.bsz)
+
+        # Metrics
+        metrics = {
+            'd_loss': d_loss, 'g_loss': g_loss,
+            'real_acc': real_acc, 'gen_acc': gen_acc,
+            'd_real_logits': d_real_logits, 'd_gen_logits': d_gen_logits,
+        }
+
+        # Update metrics
+        num_replicas = self.distribute_strategy.num_replicas_in_sync
+        for key, val in metrics.items():
+            self.metrics_dict[key].update_state(val * num_replicas)
+
+        return {m.name: m.result() for m in self.metrics}
