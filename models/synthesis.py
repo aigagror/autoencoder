@@ -16,16 +16,20 @@ def synthesize(args, z, img_c):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = layers.Conv2DTranspose(args.hdim, kernel_size=4, name='block0')(z)
-        img = layers.ReLU()(img)
+        img = custom_layers.make_conv2d_trans('block0_conv_t', args.sn, filters=args.hdim, kernel_size=4)(z)
+        img = layers.LeakyReLU(args.lrelu)(img)
+        img = custom_layers.make_conv2d('block0_conv', args.sn, filters=args.hdim, kernel_size=3, padding='same')(img)
+        img = layers.LeakyReLU(args.lrelu)(img)
 
         # Hidden blocks
         i = None
         for i in range(11 - int(np.log2(args.imsize)), len(hdims)):
+            img = layers.UpSampling2D(interpolation='bilinear')(img)
+
             img = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3,
                                             padding='same')(img)
             img = layers.BatchNormalization(name=f'block{i + 1}_norm1')(img)
-            img = layers.ReLU()(img)
+            img = layers.LeakyReLU(args.lrelu)(img)
 
             if img.shape[1] == 32:
                 img = custom_layers.SelfAttention(args, hdims[i])(img)
@@ -34,13 +38,11 @@ def synthesize(args, z, img_c):
                 img = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
                                                 padding='same')(img)
                 img = layers.BatchNormalization(name=f'block{i + 1}_norm2')(img)
-                img = layers.ReLU()(img)
-
-            img = layers.UpSampling2D(interpolation='bilinear')(img)
+                img = layers.LeakyReLU(args.lrelu)(img)
 
         # To image
-        img = custom_layers.make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=3, padding='same')(
-            img)
+        img = custom_layers.make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=1,
+                                        padding='same')(img)
 
 
     elif args.synthesis == 'style':

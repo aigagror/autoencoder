@@ -24,6 +24,12 @@ class MyMSELoss(layers.Layer):
         self.add_metric(mse, 'mse')
         return recon
 
+def make_conv2d_trans(name, sn, **kwargs):
+    if sn:
+        conv2d = tfa.layers.SpectralNormalization(layers.Conv2DTranspose(**kwargs), name=name)
+    else:
+        conv2d = layers.Conv2DTranspose(name=name, **kwargs)
+    return conv2d
 
 def make_conv2d(name, sn, **kwargs):
     if sn:

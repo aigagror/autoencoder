@@ -11,7 +11,7 @@ def encode(args, img, out_dim):
 
     elif args.encoder.endswith('conv'):
         # First block
-        out = custom_layers.make_conv2d('block0_conv', args.sn, filters=16, kernel_size=1)(img)
+        out = custom_layers.make_conv2d('block0_conv', args.sn, filters=16, kernel_size=1, padding='same')(img)
         out = layers.LeakyReLU(args.lrelu)(out)
 
         # Hidden blocks
@@ -34,13 +34,11 @@ def encode(args, img, out_dim):
 
             out = layers.AveragePooling2D()(out)
 
-
             if out.shape[1] == 4:
                 break
 
         # Last block
-        out = custom_layers.make_conv2d(f'block{i + 2}_conv', args.sn, filters=out_h, kernel_size=4, padding='valid')(
-            out)
+        out = custom_layers.make_conv2d(f'block{i + 2}_conv', args.sn, filters=out_h, kernel_size=4)(out)
         out = layers.LeakyReLU(args.lrelu)(out)
 
         out = layers.Flatten()(out)
