@@ -16,8 +16,13 @@ class NormalizeImage(layers.Layer):
         return inputs
 
 class MyMSELoss(layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.normalize = NormalizeImage()
+
     def call(self, inputs):
         img, recon = inputs
+        img, recon = self.normalize(img), self.normalize(recon)
         mse = losses.mse(img, recon)
         mse = tf.reduce_mean(mse)
         self.add_loss(mse)
