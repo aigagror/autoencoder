@@ -2,7 +2,7 @@ import os
 
 from tensorflow import keras
 
-from models.custom_layers import LatentMap, FirstStyleSynthBlock, HiddenStyleSynthBlock
+from models.custom_layers import LatentMap, FirstStyleSynthBlock, HiddenStyleSynthBlock, MyMSELoss
 from models.custom_losses import r1_penalty
 from models.encoding import encode
 from models.gan import GAN
@@ -21,7 +21,8 @@ def make_model(args, img_c):
             img = custom_layers.NormalizeImage()(img)
             z = encode(args, img, out_dim=args.zdim)
             recon = synthesize(args, z, img_c)
-            recon = SC_VGG19(args)((img, recon))
+
+            recon = MyMSELoss()((img, recon))
 
             model = keras.Model(img, recon, name='autoencoder')
             model.compile(optimizer=keras.optimizers.Adam(args.ae_lr, beta_1=0.0, beta_2=0.99),
