@@ -18,13 +18,13 @@ def make_model(args, img_c):
         else:
             # Autoencoder
             img = keras.Input((args.imsize, args.imsize, img_c), name='img-in')
-            img = custom_layers.NormalizeImage()(img)
-            z = encode(args, img, out_dim=args.zdim)
-            recon = synthesize(args, z, img_c)
+            out = custom_layers.NormalizeImage()(img)
+            out = encode(args, out, out_dim=args.zdim)
+            out = synthesize(args, out, img_c)
 
-            recon = MyMSELoss()((img, recon))
+            out = MyMSELoss()((img, out))
 
-            model = keras.Model(img, recon, name='autoencoder')
+            model = keras.Model(img, out, name='autoencoder')
             model.compile(optimizer=keras.optimizers.Adam(args.ae_lr, beta_1=0.0, beta_2=0.99),
                           steps_per_execution=args.steps_exec)
 
