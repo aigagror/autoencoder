@@ -94,7 +94,7 @@ def get_callbacks(args, ds_train, ds_val, fid_model):
     ]
     if args.model == 'autoencoder':
         model_path = os.path.join(args.out, 'ae')
-        callbacks.append(keras.callbacks.ModelCheckpoint(model_path, save_weights_only=True))
+        callbacks.append(keras.callbacks.ModelCheckpoint(model_path))
 
     elif args.model == 'gan':
         # Custom model checkpoint
