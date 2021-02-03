@@ -27,7 +27,7 @@ class MyMSELoss(layers.Layer):
         mse = tf.reduce_mean(mse)
         self.add_loss(mse)
         self.add_metric(mse, 'mse')
-        return norm_recon
+        return recon
 
 def make_conv2d_trans(name, sn, **kwargs):
     if sn:
