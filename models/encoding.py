@@ -7,7 +7,7 @@ import tensorflow_addons as tfa
 def encode(args, img, out_dim):
     if args.encoder == 'affine':
         out = layers.Flatten()(img)
-        out = custom_layers.make_dense('affine', args.sn, units=out_dim)(out)
+        out = custom_layers.make_dense('encode_affine', args.sn, units=out_dim)(out)
 
     elif args.encoder.endswith('conv'):
         # First block

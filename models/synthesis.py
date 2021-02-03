@@ -10,7 +10,7 @@ def synthesize(args, z, img_c):
     hdims = [min(h, args.hdim) for h in hdims]
 
     if args.synthesis == 'affine':
-        img = custom_layers.make_dense('affine', args.sn, units=args.imsize * args.imsize * img_c)(z)
+        img = custom_layers.make_dense('synth_affine', args.sn, units=args.imsize * args.imsize * img_c)(z)
         img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
     elif args.synthesis.endswith('conv'):
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
