@@ -17,7 +17,7 @@ parser.add_argument('--zdim', type=int, default=512)
 parser.add_argument('--hdim', type=int, default=512)
 parser.add_argument('--encoder', choices=['affine', 'conv', 'small-conv'], default='conv')
 parser.add_argument('--synthesis', choices=['affine', 'conv', 'small-conv', 'style'], default='style')
-parser.add_argument('--upsample', choices=['nearest', 'bilinear'], default='nearest')
+parser.add_argument('--upsample', choices=['nearest', 'bilinear'], default='bilinear')
 parser.add_argument('--r1', type=float, default=0)
 
 # Style Content Model
