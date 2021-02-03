@@ -22,12 +22,12 @@ class MyMSELoss(layers.Layer):
 
     def call(self, inputs):
         img, recon = inputs
-        img, recon = self.normalize(img), self.normalize(recon)
-        mse = losses.mse(img, recon)
+        norm_img, norm_recon = self.normalize(img), self.normalize(recon)
+        mse = losses.mse(norm_img, norm_recon)
         mse = tf.reduce_mean(mse)
         self.add_loss(mse)
         self.add_metric(mse, 'mse')
-        return recon
+        return norm_recon
 
 def make_conv2d_trans(name, sn, **kwargs):
     if sn:
