@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 from models import custom_layers
-
+import tensorflow_addons as tfa
 
 def encode(args, img, out_dim):
     if args.encoder == 'affine':
@@ -24,6 +24,7 @@ def encode(args, img, out_dim):
                 # Small layer
                 out = custom_layers.make_conv2d(f'block{i + 1}_conv', args.sn, filters=in_h, kernel_size=4, strides=2,
                                                 padding='same')(out)
+                out = tfa.layers.InstanceNormalization(scale=False)(out)
                 out = layers.LeakyReLU(args.lrelu)(out)
 
                 if out.shape[1] == 32:
@@ -32,6 +33,7 @@ def encode(args, img, out_dim):
                 # Standard layer
                 out = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=in_h, kernel_size=3,
                                                 padding='same')(out)
+                out = tfa.layers.InstanceNormalization(scale=False)(out)
                 out = layers.LeakyReLU(args.lrelu)(out)
 
                 if out.shape[1] == 32:
@@ -39,6 +41,7 @@ def encode(args, img, out_dim):
 
                 out = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=out_h, kernel_size=3,
                                                 padding='same')(out)
+                out = tfa.layers.InstanceNormalization(scale=False)(out)
                 out = layers.LeakyReLU(args.lrelu)(out)
 
                 out = layers.AveragePooling2D()(out)
