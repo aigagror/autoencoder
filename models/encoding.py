@@ -12,7 +12,6 @@ def encode(args, img, out_dim):
     elif args.encoder.endswith('conv'):
         # First block
         out = custom_layers.make_conv2d('encode0_conv', args.sn, filters=16, kernel_size=1, padding='same')(img)
-        out = tfa.layers.InstanceNormalization(scale=False)(out)
         out = layers.LeakyReLU(args.lrelu)(out)
 
         # Hidden blocks
