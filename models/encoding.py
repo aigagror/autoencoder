@@ -11,7 +11,8 @@ def encode(args, img, out_dim):
 
     elif args.encoder.endswith('conv'):
         # First block
-        out = custom_layers.make_conv2d('block0_conv', args.sn, filters=16, kernel_size=1, padding='same')(img)
+        out = custom_layers.make_conv2d('encode0_conv', args.sn, filters=16, kernel_size=1, padding='same')(img)
+        out = tfa.layers.InstanceNormalization(scale=False, center=False)(out)
         out = layers.LeakyReLU(args.lrelu)(out)
 
         # Hidden blocks
@@ -22,26 +23,26 @@ def encode(args, img, out_dim):
             in_h, out_h = layer_hdims[i], layer_hdims[i + 1]
             if args.encoder.startswith('small-'):
                 # Small layer
-                out = custom_layers.make_conv2d(f'block{i + 1}_conv', args.sn, filters=in_h, kernel_size=4, strides=2,
+                out = custom_layers.make_conv2d(f'encode{i + 1}_conv', args.sn, filters=in_h, kernel_size=4, strides=2,
                                                 padding='same')(out)
-                out = tfa.layers.InstanceNormalization(scale=False)(out)
+                out = tfa.layers.InstanceNormalization(scale=False, center=False)(out)
                 out = layers.LeakyReLU(args.lrelu)(out)
 
                 if out.shape[1] == 32:
                     out = custom_layers.SelfAttention(args, in_h)(out)
             else:
                 # Standard layer
-                out = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=in_h, kernel_size=3,
+                out = custom_layers.make_conv2d(f'encode{i + 1}_conv1', args.sn, filters=in_h, kernel_size=3,
                                                 padding='same')(out)
-                out = tfa.layers.InstanceNormalization(scale=False)(out)
+                out = tfa.layers.InstanceNormalization(scale=False, center=False)(out)
                 out = layers.LeakyReLU(args.lrelu)(out)
 
                 if out.shape[1] == 32:
                     out = custom_layers.SelfAttention(args, in_h)(out)
 
-                out = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=out_h, kernel_size=3,
+                out = custom_layers.make_conv2d(f'encode{i + 1}_conv2', args.sn, filters=out_h, kernel_size=3,
                                                 padding='same')(out)
-                out = tfa.layers.InstanceNormalization(scale=False)(out)
+                out = tfa.layers.InstanceNormalization(scale=False, center=False)(out)
                 out = layers.LeakyReLU(args.lrelu)(out)
 
                 out = layers.AveragePooling2D()(out)
@@ -50,7 +51,7 @@ def encode(args, img, out_dim):
                 break
 
         # Last block
-        out = custom_layers.make_conv2d(f'block{i + 2}_conv', args.sn, filters=out_dim, kernel_size=4)(out)
+        out = custom_layers.make_conv2d(f'encode{i + 2}_conv', args.sn, filters=out_dim, kernel_size=4)(out)
         out = layers.Flatten()(out)
     else:
         raise Exception(f'unknown encoder network {args.encoder}')

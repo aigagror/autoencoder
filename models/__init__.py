@@ -25,8 +25,7 @@ def make_model(args, img_c):
             out = MyMSELoss()((img, out))
 
             model = keras.Model(img, out, name='autoencoder')
-            model.compile(optimizer=keras.optimizers.Adam(args.ae_lr, beta_1=0.0, beta_2=0.99),
-                          steps_per_execution=args.steps_exec)
+            model.compile(optimizer=keras.optimizers.Adam(args.ae_lr, args.beta1), steps_per_execution=args.steps_exec)
 
             print('Starting with new model')
 
@@ -53,8 +52,8 @@ def make_model(args, img_c):
             disc_out = encode(args, disc_out, out_dim=1)
             disc = keras.Model(disc_in, disc_out, name='discriminator')
 
-            gen.compile(keras.optimizers.Adam(args.gen_lr, beta_1=0.0, beta_2=0.99))
-            disc.compile(keras.optimizers.Adam(args.disc_lr, beta_1=0.0, beta_2=0.99))
+            gen.compile(keras.optimizers.Adam(args.gen_lr, args.beta1))
+            disc.compile(keras.optimizers.Adam(args.disc_lr, args.beta1))
 
             print('Starting with new model')
 
