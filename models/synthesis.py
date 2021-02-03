@@ -17,11 +17,11 @@ def synthesize(args, z, img_c):
 
         # First block
         img = custom_layers.make_conv2d_trans('synth0_conv_t', args.sn, filters=args.hdim, kernel_size=4)(z)
-        img = layers.BatchNormalization(name=f'synth0_norm1', scale=False, center=False)(img)
+        img = layers.BatchNormalization(name=f'synth0_norm1', scale=False)(img)
         img = layers.LeakyReLU(args.lrelu)(img)
 
         img = custom_layers.make_conv2d('synth0_conv', args.sn, filters=args.hdim, kernel_size=3, padding='same')(img)
-        img = layers.BatchNormalization(name=f'synth0_norm2', scale=False, center=False)(img)
+        img = layers.BatchNormalization(name=f'synth0_norm2', scale=False)(img)
         img = layers.LeakyReLU(args.lrelu)(img)
 
         # Hidden blocks
@@ -30,7 +30,7 @@ def synthesize(args, z, img_c):
             if args.synthesis.startswith('small-'):
                 img = custom_layers.make_conv2d_trans(f'synth{i + 1}_conv_t', args.sn, filters=hdims[i],
                                                       kernel_size=4, strides=2, use_bias=False, padding='same')(img)
-                img = layers.BatchNormalization(name=f'synth{i + 1}_norm', scale=False, center=False)(img)
+                img = layers.BatchNormalization(name=f'synth{i + 1}_norm', scale=False)(img)
                 img = layers.LeakyReLU(args.lrelu)(img)
 
                 if img.shape[1] == 32:
@@ -40,7 +40,7 @@ def synthesize(args, z, img_c):
 
                 img = custom_layers.make_conv2d(f'synth{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3,
                                                 use_bias=False, padding='same')(img)
-                img = layers.BatchNormalization(name=f'synth{i + 1}_norm1', scale=False, center=False)(img)
+                img = layers.BatchNormalization(name=f'synth{i + 1}_norm1', scale=False)(img)
                 img = layers.LeakyReLU(args.lrelu)(img)
 
                 if img.shape[1] == 32:
@@ -48,7 +48,7 @@ def synthesize(args, z, img_c):
 
                 img = custom_layers.make_conv2d(f'synth{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
                                                 use_bias=False, padding='same')(img)
-                img = layers.BatchNormalization(name=f'synth{i + 1}_norm2', scale=False, center=False)(img)
+                img = layers.BatchNormalization(name=f'synth{i + 1}_norm2', scale=False)(img)
                 img = layers.LeakyReLU(args.lrelu)(img)
 
         # To image
