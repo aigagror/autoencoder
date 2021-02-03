@@ -27,6 +27,7 @@ def synthesize(args, z, img_c):
             if args.synthesis.startswith('small-'):
                 img = custom_layers.make_conv2d_trans(f'block{i + 1}_conv_t', args.sn, filters=hdims[i],
                                                       kernel_size=4, strides=2, padding='same')(img)
+                img = layers.BatchNormalization(name=f'block{i + 1}_norm', scale=False)(img)
                 img = layers.LeakyReLU(args.lrelu)(img)
 
                 if img.shape[1] == 32:
@@ -36,6 +37,7 @@ def synthesize(args, z, img_c):
 
                 img = custom_layers.make_conv2d(f'block{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3,
                                                 padding='same')(img)
+                img = layers.BatchNormalization(name=f'block{i + 1}_norm1', scale=False)(img)
                 img = layers.LeakyReLU(args.lrelu)(img)
 
                 if img.shape[1] == 32:
@@ -43,6 +45,7 @@ def synthesize(args, z, img_c):
 
                 img = custom_layers.make_conv2d(f'block{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
                                                 padding='same')(img)
+                img = layers.BatchNormalization(name=f'block{i + 1}_norm2', scale=False)(img)
                 img = layers.LeakyReLU(args.lrelu)(img)
 
         # To image
