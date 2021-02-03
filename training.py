@@ -10,7 +10,7 @@ from tensorflow import keras
 def plot_sample_images(model, ds):
     imgs = next(iter(ds))
     imgs = imgs[:4]
-    recons = model.tf_gen(imgs)
+    recons = model(imgs)
 
     ret = imgs, recons
 
