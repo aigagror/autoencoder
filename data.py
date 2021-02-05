@@ -22,6 +22,8 @@ def load_datasets(args):
 
         def decode_rgb(data):
             img = tf.image.decode_jpeg(data, channels=3)
+            img = tf.image.resize(img, [args.imsize, args.imsize])
+            img = tf.cast(img, tf.uint8)
             return img
 
         ds_train = train_data.map(decode_rgb, tf.data.AUTOTUNE)
@@ -34,7 +36,10 @@ def load_datasets(args):
         train_size, val_size = 50000, 10000
 
         def get_img(input):
-            return input['image']
+            img = input['image']
+            img = tf.image.resize(img, [args.imsize, args.imsize])
+            img = tf.cast(img, tf.uint8)
+            return img
 
         ds_train = tfds.load('mnist', try_gcs=True, split='train', shuffle_files=True)
         ds_val = tfds.load('mnist', try_gcs=True, split='test', shuffle_files=True)
@@ -61,9 +66,6 @@ def load_datasets(args):
     def preprocess(img):
         if rand_flip:
             img = tf.image.random_flip_left_right(img)
-
-        img = tf.image.resize(img, [args.imsize, args.imsize])
-        img = tf.cast(img, tf.uint8)
         return img
 
     ds_train = ds_train.map(preprocess, tf.data.AUTOTUNE)
