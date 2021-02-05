@@ -2,7 +2,6 @@ import os
 
 from tensorflow import keras
 
-from models import NormalizeImage
 from models.affine import SnConv2D
 from models.custom_losses import r1_penalty
 from models.encoding import encode
