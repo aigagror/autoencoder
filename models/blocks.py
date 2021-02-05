@@ -69,7 +69,16 @@ class PreActivation(layers.Layer):
         if batch_norm:
             act.append(layers.BatchNormalization(scale=False))
         act.append(layers.LeakyReLU(leaky_relu))
-        self.act = tf.keras.Sequential(act)
+        self.batch_norm = batch_norm
+        self.leaky_relu = leaky_relu
+        self.act1 = tf.keras.Sequential(act)
+
+    def make_second_act(self):
+        act = []
+        if self.batch_norm:
+            act.append(layers.BatchNormalization(scale=False))
+        act.append(layers.LeakyReLU(self.leaky_relu))
+        self.act2 = tf.keras.Sequential(act)
 
 
 class PreactSingleConv(PreActivation):
@@ -80,7 +89,7 @@ class PreactSingleConv(PreActivation):
         self.conv = SnConv2D(filters, **kwargs)
 
     def call(self, inputs, **kwargs):
-        x = self.act(inputs)
+        x = self.act1(inputs)
         x = self.conv(x)
         return x
 
@@ -89,14 +98,14 @@ class PreactDoubleConv(PreActivation):
     def __init__(self, filters, **kwargs):
         batch_norm, lrelu = kwargs.pop('batch_norm'), kwargs.pop('leaky_relu')
         super().__init__(batch_norm, lrelu)
-
+        self.make_second_act()
         self.conv1 = SnConv2D(filters, **kwargs)
         self.conv2 = SnConv2D(filters, **kwargs)
 
     def call(self, inputs, **kwargs):
-        x = self.act(inputs)
+        x = self.act1(inputs)
         x = self.conv1(x)
-        x = self.act(x)
+        x = self.act2(x)
         x = self.conv2(x)
         return x
 
@@ -105,6 +114,7 @@ class PreactResidual(PreActivation):
     def __init__(self, filters, **kwargs):
         batch_norm, lrelu = kwargs.pop('batch_norm'), kwargs.pop('leaky_relu')
         super().__init__(batch_norm, lrelu)
+        self.make_second_act()
         self.filters = filters
         self.sn = kwargs['spec_norm']
         self.conv1 = SnConv2D(filters, **kwargs)
@@ -118,9 +128,9 @@ class PreactResidual(PreActivation):
 
     def call(self, inputs, **kwargs):
         x0 = self.scale(inputs)
-        x = self.act(inputs)
+        x = self.act1(inputs)
         x = self.conv1(x)
-        x = self.act(x)
+        x = self.act2(x)
         x = self.conv2(x)
         return x0 + x
 
