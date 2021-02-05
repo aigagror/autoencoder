@@ -10,7 +10,7 @@ def encode(args, img, out_dim):
         out = affine.SnDense(out_dim, spec_norm=args.sn)(out)
 
     elif args.encoder in blocks.preact_block_map:
-        PreactBlockClass = blocks.preact_block_map[args.synthesis]
+        PreactBlockClass = blocks.preact_block_map[args.encoder]
 
         # Blocks
         layer_hdims = [16, 32, 64, 128, 256, 512, 512, 512, 512]
