@@ -43,6 +43,7 @@ parser.add_argument('--update-freq', type=str, default='epoch', help='tensorboar
 # Save
 parser.add_argument('--out', type=str, default='./out')
 parser.add_argument('--load', action='store_true')
+parser.add_argument('--no-save', action='store_false', dest='save', default=True)
 
 # Strategy
 parser.add_argument('--tpu', action='store_true')

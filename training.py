@@ -92,13 +92,14 @@ def get_callbacks(args, ds_train, ds_val, fid_model):
         keras.callbacks.TensorBoard(os.path.join(args.out, 'logs'), write_graph=False, update_freq=args.update_freq,
                                     profile_batch=args.profile_batch)
     ]
-    if args.model == 'autoencoder':
+    if args.model == 'autoencoder' and args.save:
         model_path = os.path.join(args.out, 'ae')
         callbacks.append(keras.callbacks.ModelCheckpoint(model_path))
 
     elif args.model == 'gan':
         # Custom model checkpoint
-        callbacks.append(GANCheckpoint(args))
+        if args.save:
+            callbacks.append(GANCheckpoint(args))
 
         # FID
         if args.fid:
