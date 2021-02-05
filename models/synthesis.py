@@ -30,7 +30,7 @@ def synthesize(args, z, img_c):
                 img = utils.SelfAttention(hdims[i], args.sn)(img)
 
             # Upsample
-            img = layers.UpSampling2D(args.upsample)(img)
+            img = layers.UpSampling2D(interpolation=args.upsample)(img)
 
         # To image
         img = blocks.PreactSingleConv(img_c, kernel_size=1, spec_norm=args.sn,
