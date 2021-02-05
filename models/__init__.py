@@ -21,6 +21,7 @@ def make_model(args, img_c):
             img = keras.Input((args.imsize, args.imsize, img_c), name='img-in')
             out = NormalizeImage()(img)
             out = encode(args, out, out_dim=args.zdim)
+            out = utils.MeasureNorm(name='latent_norm')(out)
             out = synthesize(args, out, img_c)
 
             out = AddMSE()((img, out))

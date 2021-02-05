@@ -3,6 +3,14 @@ from tensorflow.keras import layers, losses
 
 from models.affine import SnConv2D
 
+class MeasureNorm(layers.Layer):
+    def call(self, inputs, **kwargs):
+        norms = tf.linalg.norm(inputs, axis=1)
+        tf.debugging.assert_rank(norms, 1)
+        mean, var = tf.nn.moments(norms, axes=[0])
+        self.add_metric(mean, f'{self.name}_mean')
+        self.add_metric(var, f'{self.name}_var')
+        return inputs
 
 class NormalizeImage(layers.Layer):
     def call(self, inputs, **kwargs):
