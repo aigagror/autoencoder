@@ -113,11 +113,11 @@ class GAN(keras.Model):
     def train_step(self, img):
         # Disc and gen steps
         d_metrics = self.disc_step(img)
-        for _ in tf.range(self.n_disc_steps - 1):
+        for _ in range(self.n_disc_steps - 1):
             d_metrics = self.disc_step(img)
 
         g_metrics = self.gen_step(img)
-        for _ in tf.range(self.n_gen_steps - 1):
+        for _ in range(self.n_gen_steps - 1):
             g_metrics = self.gen_step(img)
 
         # Update metrics
