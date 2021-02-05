@@ -18,7 +18,7 @@ def encode(args, img, out_dim):
         out = img
         for hdim in layer_hdims:
             # Block layer
-            out = PreactBlockClass(hdim, kernel_size=3, padding='same', batch_norm=False, spec_norm=args.sn,
+            out = PreactBlockClass(hdim, kernel_size=3, padding='same', batch_norm=args.bn, spec_norm=args.sn,
                                    leaky_relu=args.lrelu)(out)
 
             # Self-attention
@@ -32,7 +32,7 @@ def encode(args, img, out_dim):
                 break
 
         # Last block
-        out = blocks.PreactSingleConv(out_dim, kernel_size=4, batch_norm=False, spec_norm=args.sn,
+        out = blocks.PreactSingleConv(out_dim, kernel_size=4, batch_norm=args.bn, spec_norm=args.sn,
                                       leaky_relu=args.lrelu)(out)
         out = layers.Flatten()(out)
     else:
