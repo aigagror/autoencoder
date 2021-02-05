@@ -80,7 +80,7 @@ class PreactSingleConv(PreActivation):
         self.conv = SnConv2D(filters, **kwargs)
 
     def call(self, inputs, **kwargs):
-        x = self.act(input)
+        x = self.act(inputs)
         x = self.conv(x)
         return x
 
@@ -94,7 +94,7 @@ class PreactDoubleConv(PreActivation):
         self.conv2 = SnConv2D(filters, **kwargs)
 
     def call(self, inputs, **kwargs):
-        x = self.act(input)
+        x = self.act(inputs)
         x = self.conv1(x)
         x = self.act(x)
         x = self.conv2(x)
@@ -118,7 +118,7 @@ class PreactResidual(PreActivation):
 
     def call(self, inputs, **kwargs):
         x0 = self.scale(inputs)
-        x = self.act(input)
+        x = self.act(inputs)
         x = self.conv1(x)
         x = self.act(x)
         x = self.conv2(x)
