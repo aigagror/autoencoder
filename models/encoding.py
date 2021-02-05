@@ -23,7 +23,7 @@ def encode(args, img, out_dim):
 
             # Self-attention
             if out.shape[1] == 32:
-                out = utils.SelfAttention(args, hdim)(out)
+                out = utils.SelfAttention(hdim, args.sn)(out)
 
             # Downsample
             out = layers.AveragePooling2D()(out)
