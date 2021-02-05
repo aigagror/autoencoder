@@ -60,8 +60,8 @@ def make_model(args, img_c):
             print('Starting with new model')
 
         # Summarize
-        gen.summary()
         disc.summary()
+        gen.summary()
 
         # GAN
         model = GAN(args, gen, disc)

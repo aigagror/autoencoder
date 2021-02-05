@@ -35,6 +35,8 @@ parser.add_argument('--disc-lr', type=float, default=4e-4)
 parser.add_argument('--beta1', type=float, default=0.0)
 parser.add_argument('--bsz', type=int)
 parser.add_argument('--fid', action='store_true')
+parser.add_argument('--disc-steps', type=int, default=1)
+parser.add_argument('--gen-steps', type=int, default=1)
 
 parser.add_argument('--steps-exec', type=int, help='steps per execution')
 parser.add_argument('--steps-epoch', type=int, help='steps per epoch')

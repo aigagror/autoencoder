@@ -6,6 +6,8 @@ from tqdm.auto import tqdm
 class GAN(keras.Model):
     def __init__(self, args, gen, disc):
         super().__init__()
+        self.n_disc_steps = args.disc_steps
+        self.n_gen_steps = args.gen_steps
         self.bsz = args.bsz
         self.r1_weight = args.r1
         self.gen = gen
@@ -111,7 +113,12 @@ class GAN(keras.Model):
     def train_step(self, img):
         # Disc and gen steps
         d_metrics = self.disc_step(img)
+        for _ in tf.range(self.n_disc_steps - 1):
+            d_metrics = self.disc_step(img)
+
         g_metrics = self.gen_step(img)
+        for _ in tf.range(self.n_gen_steps - 1):
+            g_metrics = self.gen_step(img)
 
         # Update metrics
         num_replicas = self.distribute_strategy.num_replicas_in_sync
