@@ -106,12 +106,13 @@ class PreactResidual(PreActivation):
         batch_norm, lrelu = kwargs.pop('batch_norm'), kwargs.pop('leaky_relu')
         super().__init__(batch_norm, lrelu)
         self.filters = filters
+        self.sn = kwargs['spec_norm']
         self.conv1 = SnConv2D(filters, **kwargs)
         self.conv2 = SnConv2D(filters, **kwargs)
 
     def build(self, input_shape):
         if self.filters != input_shape[-1]:
-            self.scale = SnConv2D(self.filters, kernel_size=1)
+            self.scale = SnConv2D(self.filters, kernel_size=1, spec_norm=self.sn)
         else:
             self.scale = layers.Activation('linear')
 
