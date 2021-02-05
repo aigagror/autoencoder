@@ -2,12 +2,14 @@ import os
 
 from tensorflow import keras
 
-from models.custom_layers import LatentMap, FirstStyleSynthBlock, HiddenStyleSynthBlock, MyMSELoss
+from models import NormalizeImage
+from models.affine import SnConv2D
 from models.custom_losses import r1_penalty
 from models.encoding import encode
 from models.gan import GAN
 from models.style_content import SC_VGG19
 from models.synthesis import synthesize
+from models.utils import NormalizeImage, AddMSE, LatentMap
 
 
 def make_model(args, img_c):
@@ -18,11 +20,11 @@ def make_model(args, img_c):
         else:
             # Autoencoder
             img = keras.Input((args.imsize, args.imsize, img_c), name='img-in')
-            out = custom_layers.NormalizeImage()(img)
+            out = NormalizeImage()(img)
             out = encode(args, out, out_dim=args.zdim)
             out = synthesize(args, out, img_c)
 
-            out = MyMSELoss()((img, out))
+            out = AddMSE()((img, out))
 
             model = keras.Model(img, out, name='autoencoder')
             model.compile(optimizer=keras.optimizers.Adam(args.ae_lr, args.beta1), steps_per_execution=args.steps_exec)
@@ -48,7 +50,7 @@ def make_model(args, img_c):
 
             # Discriminator
             disc_in = keras.Input((args.imsize, args.imsize, img_c), name='disc-in')
-            disc_out = custom_layers.NormalizeImage()(disc_in)
+            disc_out = NormalizeImage()(disc_in)
             disc_out = encode(args, disc_out, out_dim=1)
             disc = keras.Model(disc_in, disc_out, name='discriminator')
 

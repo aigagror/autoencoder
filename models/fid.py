@@ -77,6 +77,7 @@ class FID(keras.Model):
             if imgs.shape[-1] == 1:
                 imgs = tf.repeat(imgs, 3, axis=-1)
             return imgs
+
         ds1, ds2 = ds1.map(to_rgb, tf.data.AUTOTUNE), ds2.map(to_rgb, tf.data.AUTOTUNE)
 
         # Distribute

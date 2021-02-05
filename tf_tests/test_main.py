@@ -1,5 +1,8 @@
 import unittest
-import main, utils
+
+import main
+import utils
+
 
 class TestMain(unittest.TestCase):
     def test_small_gan_run(self):

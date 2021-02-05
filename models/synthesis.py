@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from models import custom_layers
+from models import affine, blocks, utils
 
 
 def synthesize(args, z, img_c):
@@ -10,68 +10,45 @@ def synthesize(args, z, img_c):
     hdims = [min(h, args.hdim) for h in hdims]
 
     if args.synthesis == 'affine':
-        img = custom_layers.make_dense('synth_affine', args.sn, units=args.imsize * args.imsize * img_c)(z)
+        img = affine.SnDense(args.imsize * args.imsize * img_c, spec_norm=args.sn)(z)
         img = layers.Reshape([args.imsize, args.imsize, img_c])(img)
-    elif args.synthesis.endswith('conv'):
-        z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
+    elif args.synthesis in blocks.preact_block_map:
         # First block
-        img = custom_layers.make_conv2d_trans('synth0_conv_t', args.sn, filters=args.hdim, kernel_size=4)(z)
-        img = layers.BatchNormalization(name=f'synth0_norm1', scale=False)(img)
-        img = layers.LeakyReLU(args.lrelu)(img)
-
-        img = custom_layers.make_conv2d('synth0_conv', args.sn, filters=args.hdim, kernel_size=3, padding='same')(img)
-        img = layers.BatchNormalization(name=f'synth0_norm2', scale=False)(img)
-        img = layers.LeakyReLU(args.lrelu)(img)
+        z = layers.Reshape([1, 1, z.shape[-1]])(z)
+        img = affine.SnConv2DTranspose(args.hdim, kernel_size=4, spec_norm=args.sn)(z)
 
         # Hidden blocks
-        i = None
+        PreactBlockClass = blocks.preact_block_map[args.synthesis]
         for i in range(11 - int(np.log2(args.imsize)), len(hdims)):
-            if args.synthesis.startswith('small-'):
-                img = custom_layers.make_conv2d_trans(f'synth{i + 1}_conv_t', args.sn, filters=hdims[i],
-                                                      kernel_size=4, strides=2, use_bias=False, padding='same')(img)
-                img = layers.BatchNormalization(name=f'synth{i + 1}_norm', scale=False)(img)
-                img = layers.LeakyReLU(args.lrelu)(img)
+            # Block layer
+            img = PreactBlockClass(hdims[i], kernel_size=3, padding='same', spec_norm=args.sn, batch_norm=args.bn,
+                                   leaky_relu=args.lrelu)(img)
 
-                if img.shape[1] == 32:
-                    img = custom_layers.SelfAttention(args, hdims[i])(img)
-            else:
-                img = layers.UpSampling2D(interpolation=args.upsample)(img)
+            # Self-attention
+            if img.shape[1] == 32:
+                img = utils.SelfAttention(hdims[i], args.sn)(img)
 
-                img = custom_layers.make_conv2d(f'synth{i + 1}_conv1', args.sn, filters=hdims[i], kernel_size=3,
-                                                use_bias=False, padding='same')(img)
-                img = layers.BatchNormalization(name=f'synth{i + 1}_norm1', scale=False)(img)
-                img = layers.LeakyReLU(args.lrelu)(img)
-
-                if img.shape[1] == 32:
-                    img = custom_layers.SelfAttention(args, hdims[i])(img)
-
-                img = custom_layers.make_conv2d(f'synth{i + 1}_conv2', args.sn, filters=hdims[i], kernel_size=3,
-                                                use_bias=False, padding='same')(img)
-                img = layers.BatchNormalization(name=f'synth{i + 1}_norm2', scale=False)(img)
-                img = layers.LeakyReLU(args.lrelu)(img)
+            # Upsample
+            img = layers.UpSampling2D(args.upsample)(img)
 
         # To image
-        img = custom_layers.make_conv2d(f'{hdims[i]}_to_img', args.sn, filters=img_c, kernel_size=1,
-                                        padding='same')(img)
+        img = blocks.PreactSingleConv(img_c, kernel_size=1, spec_norm=args.sn,
+                                      batch_norm=args.bn, leaky_relu=args.lrelu)(img)
 
     elif args.synthesis == 'style':
-        from models.custom_layers import ConstBlock, FirstStyleSynthBlock, HiddenStyleSynthBlock
         z = layers.Reshape([1, 1, z.shape[-1]])(z)
 
         # First block
-        img = ConstBlock(args, 'const_block')(z)
-        img = FirstStyleSynthBlock(args, hdims[0], name='synth0')(
-            (img, z))
+        img = blocks.ConstBlock(args)(z)
+        img = blocks.FirstStyleSynth(args, hdims[0])((img, z))
 
         # Hidden blocks
-        i = None
         for i in range(10 - int(np.log2(args.imsize)), len(hdims) - 1):
-            img = HiddenStyleSynthBlock(args, hdims[i], hdims[i + 1], name=f'synth{i + 1}')((img, z))
+            img = blocks.HiddenStyleSynth(args, hdims[i], hdims[i + 1])((img, z))
 
         # To image
-        img = custom_layers.make_conv2d(f'{hdims[i + 1]}_to_img', args.sn, filters=img_c, kernel_size=1,
-                                        padding='same')(img)
+        img = affine.SnConv2D(img_c, kernel_size=1, spec_norm=args.sn)(img)
 
     else:
         raise Exception(f'unknown synthesis network: {args.synthesis}')
