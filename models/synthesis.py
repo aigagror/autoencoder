@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from models import affine, blocks, utils
+from models import affine, blocks, layer_utils
 
 
 def synthesize(args, z, img_c):
@@ -27,7 +27,7 @@ def synthesize(args, z, img_c):
 
             # Self-attention
             if img.shape[1] == 32:
-                img = utils.SelfAttention(hdims[i], args.sn)(img)
+                img = layer_utils.SelfAttention(hdims[i], args.sn)(img)
 
             # Upsample
             img = layers.UpSampling2D(interpolation=args.upsample)(img)

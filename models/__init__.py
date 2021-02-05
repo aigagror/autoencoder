@@ -6,9 +6,9 @@ from models.affine import SnConv2D
 from models.custom_losses import r1_penalty
 from models.encoding import encode
 from models.gan import GAN
+from models.layer_utils import NormalizeImage, AddMSE, LatentMap, MeasureNorm
 from models.style_content import SC_VGG19
 from models.synthesis import synthesize
-from models.utils import NormalizeImage, AddMSE, LatentMap
 
 
 def make_model(args, img_c):
@@ -21,7 +21,7 @@ def make_model(args, img_c):
             img = keras.Input((args.imsize, args.imsize, img_c), name='img-in')
             out = NormalizeImage()(img)
             out = encode(args, out, out_dim=args.zdim)
-            out = utils.MeasureNorm(name='latent_norm')(out)
+            out = MeasureNorm(name='latent_norm')(out)
             out = synthesize(args, out, img_c)
 
             out = AddMSE()((img, out))

@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from models import utils, affine, blocks
+from models import layer_utils, affine, blocks
 
 
 def encode(args, img, out_dim):
@@ -23,7 +23,7 @@ def encode(args, img, out_dim):
 
             # Self-attention
             if out.shape[1] == 32:
-                out = utils.SelfAttention(hdim, args.sn)(out)
+                out = layer_utils.SelfAttention(hdim, args.sn)(out)
 
             # Downsample
             out = layers.AveragePooling2D()(out)
