@@ -52,8 +52,6 @@ class GAN(keras.Model):
             gen_imgs = self.distribute_strategy.gather(gen_imgs, axis=0)
             all_gen_imgs.append(gen_imgs)
         ds_gen = tf.concat(all_gen_imgs, axis=0)
-        tf.debugging.assert_greater_equal(ds_gen, -1.0)
-        tf.debugging.assert_less_equal(ds_gen, 1.0)
         ds_gen = tf.data.Dataset.from_tensor_slices(ds_gen).batch(self.bsz).prefetch(tf.data.AUTOTUNE)
         return ds_gen
 
