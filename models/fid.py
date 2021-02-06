@@ -25,8 +25,6 @@ class FID(keras.Model):
         # Resize to inception size
         imgs = tf.image.resize(imgs, [299, 299])
 
-        # Feed through inceptionv3
-        x = (imgs + 1) * 127.5
         x = self.preprocess(x)
         return self.inception(x)
 
