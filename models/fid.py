@@ -23,8 +23,7 @@ class FID(keras.Model):
         tf.debugging.assert_rank(imgs, 4)
 
         # Resize to inception size
-        imgs = tf.image.resize(imgs, [299, 299])
-
+        x = tf.image.resize(imgs, [299, 299])
         x = self.preprocess(x)
         return self.inception(x)
 
