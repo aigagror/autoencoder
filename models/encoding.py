@@ -5,9 +5,10 @@ from models import layer_utils, affine, blocks
 
 
 def encode(args, img, out_dim):
+    batch_norm, spec_norm = 'bn' in args.encoder_norms, 'sn' in args.encoder_norms
     if args.encoder == 'affine':
         out = layers.Flatten()(img)
-        out = affine.SnDense(out_dim, spec_norm=args.sn)(out)
+        out = affine.SnDense(out_dim, spec_norm=spec_norm)(out)
 
     elif args.encoder in blocks.preact_block_map:
         PreactBlockClass = blocks.preact_block_map[args.encoder]
@@ -18,12 +19,12 @@ def encode(args, img, out_dim):
         out = img
         for hdim in layer_hdims:
             # Block layer
-            out = PreactBlockClass(hdim, kernel_size=3, padding='same', batch_norm=args.bn, spec_norm=args.sn,
-                                   leaky_relu=args.lrelu)(out)
+            out = PreactBlockClass(hdim, kernel_size=3, padding='same', leaky_relu=args.lrelu,
+                                   batch_norm=batch_norm, spec_norm=spec_norm)(out)
 
             # Self-attention
             if out.shape[1] == 32:
-                out = layer_utils.SelfAttention(hdim, args.sn)(out)
+                out = layer_utils.SelfAttention(hdim, spec_norm)(out)
 
             # Downsample
             out = layers.AveragePooling2D()(out)
@@ -32,8 +33,8 @@ def encode(args, img, out_dim):
                 break
 
         # Last block
-        out = blocks.PreactSingleConv(out_dim, kernel_size=4, batch_norm=args.bn, spec_norm=args.sn,
-                                      leaky_relu=args.lrelu)(out)
+        out = blocks.PreactSingleConv(out_dim, kernel_size=4, leaky_relu=args.lrelu,
+                                      batch_norm=batch_norm, spec_norm=spec_norm)(out)
         out = layers.Flatten()(out)
     else:
         raise Exception(f'unknown encoder network {args.encoder}')
